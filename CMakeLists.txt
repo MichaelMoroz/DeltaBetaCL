@@ -21,6 +21,8 @@ add_subdirectory(src)
 
 target_include_directories(DeltaBetaCLSources PUBLIC
   src
+  ${SFML_INCLUDE_DIR}
+  ${ANTTWEAKBAR_DIR}/include
 )
 
 
