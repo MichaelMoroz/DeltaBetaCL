@@ -4,30 +4,25 @@
 #include <SFML/Graphics.hpp>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <string>
+
 #include <iostream>
 #include <fstream>
 #include <thread> 
 
 #ifdef _WIN32
 #include <windows.h>
-#define ERROR_MSG(x) MessageBox(nullptr, TEXT(x), TEXT("ERROR"), MB_OK);
+#define ErrMsg(x) MessageBox(nullptr, TEXT(x), TEXT("ERROR"), MB_OK);
 #else
-#define ERROR_MSG(x) std::cerr << x << std::endl;
+#define ErrMsg(x) std::cerr << x << std::endl;
 #endif
 
 #include <mutex>
-#include <cstdlib>
-#include <ctime>
+
 
 using namespace std;
 
 const sf::VideoMode window_size(1024, 1024, 24);
 
-float Rand()
-{
-	return ( (float) (rand() % RAND_MAX) / (float)RAND_MAX);
-}
 
 #if defined(_WIN32)
 int WinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow) {
