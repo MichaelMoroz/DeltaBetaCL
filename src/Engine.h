@@ -17,81 +17,55 @@ static int PIPELINE[PIPELINE_ITER][2] = { { 128, 3 },{ 128, 1 }, { 32, 3 }, { 32
 #include <Utilities.h>
 #include <SFML/OpenGL.hpp>
 #include <AntTweakBar.h>
+#include <glm/glm.hpp>
+#include <OpenCL.h>
+#include <CLFunction.h>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
 //stuff
 
-
-static const string vert_glsl = "assets/shaders/vertex_shader.glsl";
-static const string frag_glsl = "assets/shaders/fragment_shader.glsl";
-
-
+static const string vert_glsl = "shaders/vertex_shader.glsl";
+static const string frag_glsl = "shaders/fragment_shader.glsl";
+static const string kernel_cl = "OpenCL/kernel.c";
 
 
 class Engine
 {
 public:
-	Engine(string config, string window_name);
+	Engine(string config, GLint render_texture, int width, int height);
 
 	bool SetFOV(float fov);
-	bool Update();
-	bool Running();
+	bool Render();
 
 protected:
 	void LoadFromConfig(string file);
-	void ManageEvents();
-	void Render();
 	void DrawQuad();
-	void SetTW_Interface();
 
 private:
-	sf::Clock timer;
-	sf::VideoMode screen_size;
-	float ray_march_resolution;
-	int ResX, ResY, MarchResX, MarchResY;
-	sf::RenderWindow *window;
-	sf::Uint32 window_style;
-	bool fullscreen;
+	int ResX, ResY;
 	ShaderHandle render_shader;
 	GLint rshad;
-	bool running;
-	TwBar *stats, *settings;
 
-	sf::Sprite render_sprite;
-	sf::Texture final_texture;
-	
-	//Rendering pipeline
-	GLuint Framebuffer[PIPELINE_ITER];
-	GLuint textures[PIPELINE_ITER][MAX_TEXTURES_PER_ITER];
-	GLuint textures_HID[PIPELINE_ITER][MAX_TEXTURES_PER_ITER];
-
-	
-	/*GLuint main_texture[TEXTURES_MAIN];
-	GLuint buffer_texture[TEXTURES_PER_ITER*PIPELINE_ITER-1]*/;
-	
 	GLint  glfinal_texture;
-	
-	//GLuint main_texture_HID[TEXTURES_MAIN], buffer_texture_HID[TEXTURES_PER_ITER*PIPELINE_ITER];
-	
-	
+
 	GLuint vertexbuffer, uvbuffer;
 	
 	float time;
 	float fps, smoothfps;
 	float phi, theta, roll;
-	Eigen::Vector3f CameraPosition, CameraDirZ, CameraDirY, CameraDirX;
-	Eigen::Matrix3f CameraMat;
+	glm::vec3 CameraPosition, CameraDirZ, CameraDirY, CameraDirX;
+	glm::mat3 CameraMat;
 
 	int iFracIter;
 	float iFracScale;
 	float iFracAng1;
     float iFracAng2;
-	Eigen::Vector3f iFracShift;
-	Eigen::Vector3f iFracCol;
+	glm::vec3 iFracShift;
+	glm::vec3 iFracCol;
 	float roughness, metallic;
 
-	Eigen::Vector3f light, light_color;
+	glm::vec3 light, light_color;
 	float exposure, light_radius;
 	float FOV, SuperResolutionCondition;
 	float mouse_sensitivity, roll_speed, dRoll;

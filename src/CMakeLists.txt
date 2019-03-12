@@ -7,4 +7,18 @@ add_library(DeltaBetaCLSources
 
   OpenCL.h
   CLFunction.h
+  CLRender.h
+  CLRender.cpp
+
+  Camera.h
+  Camera.cpp
+
+  PhysicsEngine.h
+  PhysicsEngine.cpp
+
+  World.h
+  World.cpp
+
+  BVH.h
+  BVH.cpp
 )

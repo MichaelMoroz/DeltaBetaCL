@@ -1,9 +1,13 @@
 
 #include <AntTweakBar.h>
-#include <glm/glm.hpp>
 #include <SFML/Graphics.hpp>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <Camera.h>
+
+#include <Utilities.h>
+#include <OpenCL.h>
+#include <CLFunction.h>
 
 #include <iostream>
 #include <fstream>
@@ -36,7 +40,7 @@ int main(int argc, char *argv[]) {
 	settings.majorVersion = 2;
 	settings.minorVersion = 0;
 
-	sf::RenderWindow window(window_size, "Window Name", sf::Style::Close, settings);
+	sf::RenderWindow window(window_size, "Engine Demo", sf::Style::Close, settings);
 	window.setFramerateLimit(60);
 	
 	float fps = 0, smoothfps = 0, time = 0;

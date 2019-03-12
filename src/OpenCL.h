@@ -32,63 +32,6 @@ public:
 		queue = A.queue;
 	}
 
-	OpenCL(string Kernel_path, int device_n, int platform_n)
-	{
-		ifstream sin(Kernel_path);
-
-		if (!sin.is_open())
-		{
-			cout << "Error opening kernel" << endl;
-		}
-
-		Program::Sources sources;
-		string code((istreambuf_iterator<char>(sin)), istreambuf_iterator<char>());
-
-		sources.push_back(make_pair(code.c_str(), code.length()));
-
-		vector<Platform> all_platforms;
-		vector<Device> all_devices;
-		vector<Device> dev;
-
-		Platform::get(&all_platforms);
-
-		if (all_platforms.size() == 0)
-		{
-			cout << "No platforms found. Check OpenCL installation!\n";
-
-		}
-
-
-		default_platform = all_platforms[platform_n];
-		default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-		if (all_devices.size() == 0)
-		{
-			cout << "No devices found. Check OpenCL installation!\n";
-
-		}
-
-
-		default_device = all_devices[device_n];
-		cl::Context context(default_device);
-		default_context = context;
-		default_program = cl::Program(context, sources);
-		dev.push_back(default_device);
-		char* options = ""/*"-cl-mad-enable -cl-fast-relaxed-math"*/;
-		if (default_program.build(dev,options) != CL_SUCCESS)
-		{
-			ofstream inter;
-			inter.open("errors.txt", ofstream::ate);
-			cout << "Error building kernel: " << endl << default_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
-			inter << "Error building kernel: " << endl << default_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
-			system("pause");
-		}
-		else
-		{
-			cout << "OpenCL kernel compiled successfully." << endl;
-		}
-
-		queue = CommandQueue(default_context, default_device);
-	}
 
 	OpenCL(string Kernel_path)
 	{
@@ -96,7 +39,7 @@ public:
 
 		if (!sin.is_open())
 		{
-			cout << "Error opening kernel" << endl;
+			ERROR_MSG("Error opening OpenCL kernel file");
 		}
 
 		Program::Sources sources;
@@ -120,7 +63,7 @@ public:
 
 		if (all_platforms.size() == 0)
 		{
-			cout << "No platforms found. Check OpenCL installation!\n";
+			ERROR_MSG("No platforms found. Check OpenCL installation!\n");
 		}
 
 		bool found_context = 0;
@@ -132,7 +75,7 @@ public:
 
 			if (all_devices.size() == 0)
 			{
-				cout << "No devices found. Check OpenCL installation!\n";
+				ERROR_MSG("No devices found. Check OpenCL installation!\n");
 			}
 
 			// Create the properties for this context.
@@ -167,7 +110,7 @@ public:
 
 		if (!found_context)
 		{
-			std::cerr << "Unable to find a compatible OpenCL device." << std::endl;
+			ERROR_MSG("Unable to find a compatible OpenCL device for GL-CL interoperation.");
 		}
 
 		// Create a command queue.
@@ -177,13 +120,13 @@ public:
 		{
 			ofstream inter;
 			inter.open("errors.txt", ofstream::ate);
-			cout << "Error building kernel: " << endl << default_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
+			ERROR_MSG("Error building kernel! Check errors.txt! ");
 			inter << "Error building kernel: " << endl << default_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
 			system("pause");
 		}
 		else
 		{
-			cout << "OpenCL kernel compiled successfully." << endl << endl;
+			cout << "OpenCL kernel compiled successfully." << endl;
 		}
 
 		queue = CommandQueue(default_context, default_device);

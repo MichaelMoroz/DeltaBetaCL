@@ -12,6 +12,7 @@ set(ANTTWEAKBAR_DIR C:/Libraries/AntTweakBar)
 
 find_package(SFML 2.5 COMPONENTS system window graphics REQUIRED)
 
+
 include_directories(${SDK_DIRECTORY}/Windows/v7.1/Include)
 include_directories(${ANTTWEAKBAR_DIR}/include)
 include_directories(${GLM_DIR})
@@ -40,6 +41,7 @@ add_custom_command(TARGET DeltaBetaCLEngine PRE_BUILD
 
 target_compile_definitions(DeltaBetaCLEngine PRIVATE SFML_STATIC)
 target_link_libraries(DeltaBetaCLEngine
+  DeltaBetaCLSources
   sfml-system
   sfml-window
   sfml-graphics

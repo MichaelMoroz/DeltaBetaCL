@@ -1,22 +1,5 @@
-void Logger(string text)
-{
-	ofstream LOG("log.txt", std::ios::app);
-	LOG << text << "\n";
-	LOG.close();
-}
+#include <Utilities.h>
 
-//random float number between 0 and 1
-float Rand()
-{
-	return ((float)(rand() % RAND_MAX) / (float)RAND_MAX);
-}
-
-template < typename T > std::string num2str(const T& n)
-{
-	std::ostringstream stm;
-	stm << n;
-	return stm.str();
-}
 
 
 void ShaderHandle::LoadShaders(const string vertex_file_path, const string fragment_file_path)
@@ -57,7 +40,7 @@ void ShaderHandle::LoadShaders(const string vertex_file_path, const string fragm
 
 
 	// Compile Vertex Shader
-	LOGGERER("Compiling shader: " + (string)vertex_file_path);
+	Logger("Compiling shader: " + (string)vertex_file_path);
 	char const * VertexSourcePointer = VertexShaderCode.c_str();
 	glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
 	glCompileShader(VertexShaderID);
@@ -69,12 +52,12 @@ void ShaderHandle::LoadShaders(const string vertex_file_path, const string fragm
 	{
 		std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
 		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-		LOGGERER(&VertexShaderErrorMessage[0]);
+		Logger(&VertexShaderErrorMessage[0]);
 	}
 
 
 	// Compile Fragment Shader
-	LOGGERER("Compiling shader:" + (string)fragment_file_path);
+	Logger("Compiling shader:" + (string)fragment_file_path);
 	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
 	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
 	glCompileShader(FragmentShaderID);
@@ -86,13 +69,13 @@ void ShaderHandle::LoadShaders(const string vertex_file_path, const string fragm
 	{
 		std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
 		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-		LOGGERER(&FragmentShaderErrorMessage[0]);
+		Logger(&FragmentShaderErrorMessage[0]);
 	}
 
 
 
 	// Link the program
-	LOGGERER("Linking program!");
+	Logger("Linking program!");
 	ProgramID = glCreateProgram();
 	glAttachShader(ProgramID, VertexShaderID);
 	glAttachShader(ProgramID, FragmentShaderID);
@@ -105,7 +88,7 @@ void ShaderHandle::LoadShaders(const string vertex_file_path, const string fragm
 	{
 		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
 		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-		LOGGERER(&ProgramErrorMessage[0]);
+		Logger(&ProgramErrorMessage[0]);
 	}
 
 
@@ -141,14 +124,4 @@ void ShaderHandle::setUniform(string name, int X)
 	glUniform1i(A, X);
 }
 
-void ShaderHandle::setUniform(string name, Eigen::Matrix3f X, bool transpose = false)
-{
-	GLuint A = glGetUniformLocation(ProgramID, name.c_str());
-	glUniformMatrix3fv(A, 1, transpose, X.data());
-}
 
-void ShaderHandle::setUniform(string name, Eigen::Vector3f X)
-{
-	GLuint A = glGetUniformLocation(ProgramID, name.c_str());
-	glUniform3fv(A, 1, X.data());
-}

@@ -70,7 +70,8 @@ public:
 		CL->queue.flush();
 		if (error != 0)
 		{
-			cout << "OpenCL function " << name << " error: " << error << endl;
+			string error = "OpenCL function " + name + " error: " + num2str(error);
+			ERROR_MSG(error.c_str());
 		}
 	}
 
