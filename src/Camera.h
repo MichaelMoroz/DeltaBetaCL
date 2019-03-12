@@ -15,7 +15,7 @@ public:
 		FirstPerson
 	};
 
-	Camera(): alpha(0), beta(0), gamma(0)
+	Camera(): alpha(0), beta(0), gamma(0), cur_mode(Free)
 	{
 		dirx = quat(0, 1, 0, 0);
 		diry = quat(0, 0, 1, 0);
@@ -31,13 +31,16 @@ public:
 	void SetRotation(float a, float b, float c);
 	void SetSmoothness(float k);
 	void SetMode(CameraMode mode);
+	void SetRadius(float r);
+	void LookAt(vec3 pos);
 
 	vec3 GetPosition();
 	vec3 GetDirX();
 	vec3 GetDirY();
 	vec3 GetDirZ();
 
-	void Move(vec3 dx);
+	void Shift(vec3 dx);
+	void Move(vec3 dv);
 	void RotateX(float a);
 	void RotateY(float a);
 	void Roll(float a);
@@ -53,10 +56,12 @@ private:
 	//camera inertial speed
 	vec3 velocity;
 
-	//camera direction angular velocities
+	//camera direction inertial angular velocities
 	float alpha, beta, gamma;
-
+	
+	// 3 person view radius
 	float radius;
 
+	//movement smoothness parameter
 	float smooth;
 };

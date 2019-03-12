@@ -38,53 +38,90 @@ void Camera::SetRotation(float a, float b, float c)
 	dirz = rotation*quat(0, 0, 0, 1);
 }
 
+//k = 0 - absolutely sharp movements, 1 - infinitely smooth movements, best ~0.1
 void Camera::SetSmoothness(float k)
 {
 	smooth = k;
 }
 
-void Camera::Move(vec3 dx)
+void Camera::Shift(vec3 dx)
 {
 	position += dx;
 }
 
+void Camera::Move(vec3 dv)
+{
+	velocity += dv;
+}
+
 void Camera::RotateX(float a)
 {
+	alpha += a;
 }
 
 void Camera::RotateY(float a)
 {
+	beta += a;
 }
 
 void Camera::Roll(float a)
 {
+	gamma += a;
 }
 
 void Camera::Update(float dt)
 {
+	//interpolate
+	dt = (dt*smooth + 1 - smooth);
+
+	Shift(velocity*dt);
+	RotateLR(alpha*dt);
+	RotateUD(beta*dt);
+	RotateRoll(gamma*dt);
+
+	//exponential decay of our velocities, if smooth = 1 - they won't decay at all
+	velocity -= (1 - smooth)*velocity*dt;
+	alpha -= (1 - smooth)*alpha*dt;
+	beta -= (1 - smooth)*beta*dt;
+	gamma -= (1 - smooth)*gamma*dt;
 }
 
 vec3 Camera::GetPosition()
 {
+	if (cur_mode == ThirdPerson)
+	{
+		return position - radius*GetDirX();
+	}
+
 	return position;
 }
 
 vec3 Camera::GetDirX()
 {
-	return vec3(dirx.x, dirx.y, dirx.z);
+	return normalize(vec3(dirx.x, dirx.y, dirx.z));
 }
 
 vec3 Camera::GetDirY()
 {
-	return vec3(diry.x, diry.y, diry.z);
+	return normalize(vec3(diry.x, diry.y, diry.z));
 }
 
 vec3 Camera::GetDirZ() 
 {
-	return vec3(dirz.x, dirz.y, dirz.z);
+	return normalize(vec3(dirz.x, dirz.y, dirz.z));
 }
 
 void Camera::SetMode(CameraMode mode)
 {
 	cur_mode = mode;
+}
+
+void Camera::SetRadius(float r)
+{
+	radius = r;
+}
+
+void Camera::LookAt(vec3 pos)
+{
+	//?
 }
