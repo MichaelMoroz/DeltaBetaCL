@@ -8,6 +8,12 @@
 #include <ctime>
 #include <vector>
 #include <iostream>
+#ifdef _WIN32
+#include <windows.h>
+#define ERROR_MSG(x) MessageBox(nullptr, TEXT(x), TEXT("ERROR"), MB_OK);
+#else
+#define ERROR_MSG(x) std::cerr << x << std::endl;
+#endif
 
 using namespace cl;
 using namespace std;

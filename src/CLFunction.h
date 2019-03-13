@@ -1,5 +1,6 @@
 #pragma once
 
+#include<Utilities.h>
 //This class wraps the OpenCL kernel function computation
 class CLFunction
 {
@@ -38,6 +39,11 @@ public:
 	}
 
 	void SetArg(int i, cl::Buffer &A)
+	{
+		kernel.setArg(i, A);
+	}
+
+	void SetArg(int i, cl::Image2D &A)
 	{
 		kernel.setArg(i, A);
 	}

@@ -3,11 +3,12 @@
 #include <SFML/Graphics.hpp>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <Camera.h>
 
 #include <Utilities.h>
 #include <OpenCL.h>
+#include <Camera.h>
 #include <CLFunction.h>
+#include <CLRender.h>
 
 #include <iostream>
 #include <fstream>
@@ -35,6 +36,9 @@ int main(int argc, char *argv[]) {
 #endif 
 	sf::Clock timer;
 	srand(time(NULL));
+
+	//Load opencl code and compile it
+	OpenCL CL("OpenCL\\kernel.c");
 
 	sf::ContextSettings settings;
 	settings.majorVersion = 2;
