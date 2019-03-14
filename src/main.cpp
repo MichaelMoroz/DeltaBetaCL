@@ -59,8 +59,12 @@ int main(int argc, char *argv[]) {
 	img.create(1024, 512, sf::Color::White);
 	sf::Texture test_render;
 	test_render.loadFromImage(img);
+	Camera camera;
 	CLRender RND("first_pass_render", test_render.getNativeHandle(), 1, 1024, 512, 1, 1, &CL);
+	sf::Sprite spr;
+	spr.setTexture(test_render);
 
+	RND.Run(camera);
 	float fps = 0, smoothfps = 0, time = 0;
 	while (window.isOpen())
 	{
@@ -90,7 +94,7 @@ int main(int argc, char *argv[]) {
 
 		}
 
-
+		window.draw(spr);
 		window.display();
 
 		//fps and time calculations

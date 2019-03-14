@@ -22,8 +22,8 @@ CLRender::CLRender(string name, int textures, int width, int height, int lvl, in
 	render.Initialize(name, cl, 1, 1, width, height);
 }
 
-CLRender::CLRender(string name, GLuint textureID, int textures, int width, int height, int lvl, int scale, OpenCL *a) :
-	cl(a), W(width), H(height), S(scale), L(lvl)
+CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int height, int lvl, int scale, OpenCL *a) :
+	cl(a), W(width), H(height), S(scale), L(lvl), textures(txtr)
 {
 	clImage = new Image2D*[lvl];
 	for (int i = 0; i < lvl; i++)

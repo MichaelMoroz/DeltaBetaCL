@@ -81,8 +81,8 @@ public:
 		CL->queue.flush();
 		if (error != 0)
 		{
-			string error = "OpenCL function " + name + " error: " + num2str(error);
-			ERROR_MSG(error.c_str());
+			//string error = "OpenCL function " + name + " error: " + num2str(error);
+			ERROR_MSG("CLFunction ERROR");
 		}
 	}
 
