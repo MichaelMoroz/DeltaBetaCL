@@ -42,18 +42,13 @@ public:
 	}
 };
 
-void Logger(string text)
-{
-	ofstream LOG("log.txt", std::ios::app);
-	LOG << text << "\n";
-	LOG.close();
-}
+
+void Logger(string text);
+
 
 //random float number between 0 and 1
-float Rand()
-{
-	return ((float)(rand() % RAND_MAX) / (float)RAND_MAX);
-}
+float Rand();
+
 
 template < typename T > std::string num2str(const T& n)
 {

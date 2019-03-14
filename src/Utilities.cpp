@@ -1,5 +1,17 @@
 #include <Utilities.h>
 
+void Logger(string text)
+{
+	ofstream LOG("log.txt", std::ios::app);
+	LOG << text << "\n";
+	LOG.close();
+}
+
+//random float number between 0 and 1
+float Rand()
+{
+	return ((float)(rand() % RAND_MAX) / (float)RAND_MAX);
+}
 
 
 void ShaderHandle::LoadShaders(const string vertex_file_path, const string fragment_file_path)

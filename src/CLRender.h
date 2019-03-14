@@ -1,10 +1,10 @@
 #pragma once
 
 #include <GL/glew.h>
-
 #include <OpenCL.h>
 #include <CLFunction.h>
 #include <Camera.h>
+#include <glm/gtc/type_ptr.hpp>
 
 class CLRender
 {

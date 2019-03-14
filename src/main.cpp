@@ -1,14 +1,14 @@
 
-#include <AntTweakBar.h>
-#include <SFML/Graphics.hpp>
-#include <sys/types.h>
-#include <sys/stat.h>
 
-#include <Utilities.h>
+
 #include <OpenCL.h>
 #include <Camera.h>
 #include <CLFunction.h>
 #include <CLRender.h>
+
+#include <SFML/Graphics.hpp>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <iostream>
 #include <fstream>
@@ -36,17 +36,31 @@ int main(int argc, char *argv[]) {
 #endif 
 	sf::Clock timer;
 	srand(time(NULL));
+	
 
-	//Load opencl code and compile it
-	OpenCL CL("OpenCL\\kernel.c");
+	
 
 	sf::ContextSettings settings;
 	settings.majorVersion = 2;
 	settings.minorVersion = 0;
-
+	 
 	sf::RenderWindow window(window_size, "Engine Demo", sf::Style::Close, settings);
 	window.setFramerateLimit(60);
-	
+	if (glewInit())
+	{
+		std::cerr << "failed to init GLEW" << std::endl;
+	}
+
+
+
+	//Load opencl code and compile it
+	OpenCL CL("OpenCL\\kernel.c");
+	sf::Image img;
+	img.create(1024, 512, sf::Color::White);
+	sf::Texture test_render;
+	test_render.loadFromImage(img);
+	CLRender RND("first_pass_render", test_render.getNativeHandle(), 1, 1024, 512, 1, 1, &CL);
+
 	float fps = 0, smoothfps = 0, time = 0;
 	while (window.isOpen())
 	{

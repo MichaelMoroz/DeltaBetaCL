@@ -48,11 +48,16 @@ public:
 		kernel.setArg(i, A);
 	}
 
+	//floatN
+	void SetArg(int i, int N, float *A)
+	{
+		kernel.setArg(i, sizeof(float)*N, A);
+	}
+
 	void SetArg(int i, float A)
 	{
 		kernel.setArg(i, sizeof(float), (void*)&A);
 	}
-
 
 	void SetArg(int i, int A)
 	{

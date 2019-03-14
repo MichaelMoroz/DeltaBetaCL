@@ -1,5 +1,7 @@
 #pragma once
 #include <omp.h>
+#include <GL/glew.h>
+#include <SFML/OpenGL.hpp>
 #include <CL/cl.hpp>
 #include <string>
 #include <sstream>
