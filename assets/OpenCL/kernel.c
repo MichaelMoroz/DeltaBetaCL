@@ -208,14 +208,13 @@ float4 render_point(vec2 pos, vec2 mres, vec2 cres, float4 data)
 ///MAIN FUNCIONS
 
 //find distance to surface(+ h and num of iterations) for each pixel
-__kernel void first_pass_render(__write_only image2d_t render, __read_only image2d_t prev_render, 
+__kernel void first_pass_render(__read_write image2d_t render, __read_write image2d_t prev_render, 
 	float4 cam_pos, float4 dirx, float4 diry, float4 dirz, float4 resolution, int step)
 {
 	
 	
-	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(1,0,0,0));
+	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(1,0,0,1));
 }
-
 
 //calculate shadow rays, reflection rays and refraction rays
 
