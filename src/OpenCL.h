@@ -30,6 +30,8 @@ public:
 	Program default_program;
 	Platform default_platform;
 	cl::CommandQueue queue;
+	vector<std::size_t> group_size;
+	string device_name, device_extensions;
 
 	void operator = (OpenCL A)
 	{
@@ -136,7 +138,9 @@ public:
 		{
 			cout << "OpenCL kernel compiled successfully." << endl;
 		}
-
+		device_name = default_device.getInfo<CL_DEVICE_NAME>();
+		group_size = default_device.getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>();
+		device_extensions = default_device.getInfo<CL_DEVICE_EXTENSIONS>();
 		queue = CommandQueue(default_context, default_device);
 	}
 

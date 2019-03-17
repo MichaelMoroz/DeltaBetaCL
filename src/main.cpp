@@ -37,16 +37,14 @@ int main(int argc, char *argv[]) {
 #endif 
 	sf::Clock timer;
 	srand(time(NULL));
-	
-
-	
 
 	sf::ContextSettings settings;
 	settings.majorVersion = 2;
 	settings.minorVersion = 0;
 	 
 	sf::RenderWindow window(window_size, "Engine Demo", sf::Style::Close, settings);
-	window.setFramerateLimit(60);
+	
+	window.setVerticalSyncEnabled(true);
 	if (glewInit())
 	{
 		std::cerr << "failed to init GLEW" << std::endl;
@@ -61,34 +59,14 @@ int main(int argc, char *argv[]) {
 
 	Engine engine(&test_render);
 	window.setActive(true);
-	float fps = 0, smoothfps = 0, time = 0;
+
 	while (window.isOpen())
 	{
-		
 		window.clear(sf::Color::Black);
-
 		engine.Update(&window);
-	
 		engine.Render();
-
 		window.draw(spr);
 		window.display();
-		
-
-		//fps and time calculations
-		float dt = timer.getElapsedTime().asSeconds();
-		fps = 1 / dt;
-		if (time == 0)
-		{
-			smoothfps = fps;
-		}
-		else
-		{
-			smoothfps = smoothfps*0.95 + 0.05*fps;
-		}
-		time += dt;
-
-		timer.restart();
 	}
 	
 	return 0;

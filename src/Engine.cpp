@@ -16,6 +16,15 @@ void Engine::SetRenderingTexture(sf::Texture texture)
 void Engine::Update(sf::RenderWindow *window)
 {
 	float dt = timer.getElapsedTime().asSeconds();
+	fps = 1 / dt;
+	if (time == 0)
+	{
+		smoothfps = fps;
+	}
+	else
+	{
+		smoothfps = smoothfps*0.95 + 0.05*fps;
+	}
 	time += dt;
 
 	sf::Event event;
@@ -24,6 +33,21 @@ void Engine::Update(sf::RenderWindow *window)
 		if (event.type == sf::Event::Closed) {
 			window->close();
 			break;
+		}
+		else if (event.type == sf::Event::MouseButtonReleased)
+		{
+
+		}
+		else if (event.type == sf::Event::MouseMoved)
+		{
+			sf::Vector2f mouse = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
+			sf::Vector2f dmouse = mouse - prev_mouse;
+			if (prev_mouse.x != 0 && prev_mouse.y != 0)
+			{
+				world.GetCamera()->RotateX(-dmouse.x*0.0004);
+				world.GetCamera()->RotateY(dmouse.y*0.0004);
+			}
+			prev_mouse = mouse;
 		}
 		else if (event.type == sf::Event::KeyPressed) {
 			const sf::Keyboard::Key keycode = event.key.code;
@@ -34,28 +58,15 @@ void Engine::Update(sf::RenderWindow *window)
 			}
 
 		}
-		else if (event.type == sf::Event::MouseButtonReleased)
-		{
-
-		}
-		else if (event.type == sf::Event::MouseMoved)
-		{
-			sf::Vector2f mouse = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-			sf::Vector2f dmouse = mouse - prev_mouse;
-
-			world.GetCamera()->RotateX(dmouse.x);
-			world.GetCamera()->RotateY(dmouse.y);
-
-			prev_mouse = mouse;
-		}
 	}
-	
+	world.GetCamera()->Update(0.01);
 	timer.restart();
 }
 
 bool Engine::Render()
 {
 	depth->Run();
+	CL->queue.finish();
 	return true;
 }
 

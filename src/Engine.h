@@ -30,7 +30,7 @@ private:
 	World world;
 	CLRender *depth, *texturing, *post_processing;
 
-	float time;
+	float time, fps, smoothfps;
 	sf::Vector2f prev_mouse;
 	sf::Clock timer;
 };

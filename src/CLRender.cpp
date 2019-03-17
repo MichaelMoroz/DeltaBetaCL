@@ -82,7 +82,7 @@ bool CLRender::Run()
 		{
 			int w = W*pow(0.5, L - i - 1);
 			int h = H*pow(0.5, L - i - 1);
-			render.SetRange(1, 1, w, h);
+			render.SetRange(16, 16, w, h);
 			//set all current textures for this resolution
 			for (int j = 0; j < textures; j++)
 			{
@@ -103,6 +103,7 @@ bool CLRender::Run()
 			render.SetArg(2 * textures + 7, i);
 			render.RFlush();
 		}
+		
 		return true;
 	}
 }

@@ -222,8 +222,7 @@ __kernel void first_pass_render(__read_write image2d_t render, __read_write imag
 	float FOV = camera.x*DEG;
 	float4 ray = normalize(dirx + FOV*pos.x*dirz + FOV*pos.y*diry);
 	float4 position = cam_pos + camera2.x*pos.x*dirz + camera2.x*pos.y*diry;
-	
-	write_imagef(render, pixel, (float4)(ray.x,ray.y,ray.z,1));
+	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(ray.x,ray.y,ray.z,1.f));
 }
 
 //calculate shadow rays, reflection rays and refraction rays
