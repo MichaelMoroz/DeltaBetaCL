@@ -111,6 +111,16 @@ vec3 Camera::GetDirZ()
 	return normalize(vec3(dirz.x, dirz.y, dirz.z));
 }
 
+vec4 Camera::GetCameraProperties()
+{
+	return vec4(FOV, exposure, focus, bokeh);
+}
+
+vec4 Camera::GetCameraProperties2()
+{
+	return vec4(size, mblur, speckle, 0);
+}
+
 void Camera::SetMode(CameraMode mode)
 {
 	cur_mode = mode;
@@ -119,6 +129,41 @@ void Camera::SetMode(CameraMode mode)
 void Camera::SetRadius(float r)
 {
 	radius = r;
+}
+
+void Camera::SetFOV(float fov)
+{
+	FOV = fov;
+}
+
+void Camera::SetBokehRadius(float b)
+{
+	bokeh = b;
+}
+
+void Camera::SetMotionBlur(float mb)
+{
+	mblur = mb;
+}
+
+void Camera::SetExposure(float e)
+{
+	exposure = e;
+}
+
+void Camera::SetFocus(float f)
+{
+	focus = f;
+}
+
+void Camera::SetSpeckleRadius(float s)
+{
+	speckle = s;
+}
+
+void Camera::SetCameraSize(float s)
+{
+	size = s;
 }
 
 void Camera::LookAt(vec3 pos)

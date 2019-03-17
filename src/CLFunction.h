@@ -75,7 +75,7 @@ public:
 		CL->queue.finish();
 	}
 
-	void RFlush()
+	bool RFlush()
 	{
 		int error = CL->queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local);
 		CL->queue.flush();
@@ -83,7 +83,9 @@ public:
 		{
 			//string error = "OpenCL function " + name + " error: " + num2str(error);
 			ERROR_MSG("CLFunction ERROR");
+			return false;
 		}
+		return true;
 	}
 
 	void RFlushCustom(cl::NDRange g, cl::NDRange l)

@@ -1,485 +1,96 @@
-//
-//#include "Engine.h"
-//
-//float sqr(float x)
-//{
-//	return x*x;
-//}
-//
-/////ray_march_resolution lower then 1 makes a lower resolution ray marching, more than 1 is effectively MSAA
-//Engine::Engine(string config, GLint render_texture, int width, int height)
-//{
-//	LoadFromConfig(config);
-//
-//	RenderMode = NORM;
-//
-//	roll = 0;
-//	phi = 0;
-//	theta = 0;
-//
-//	exposure = 1;
-//	metallic = 0.3;
-//	roughness = 0.3;
-//	light = Eigen::Vector3f(-0, -2, -8);
-//	light_color =  Eigen::Vector3f(23.47, 21.31, 20.79);
-//	light_radius = 0.5;
-//
-//	iFracIter= 7;
-//	iFracScale= 1.8f;
-//	iFracAng1= -0.12f;
-//	iFracAng2= 0.5f;
-//    iFracShift = Eigen::Vector3f(-2.12f, -2.75f, 0.49f);
-//	iFracCol = Eigen::Vector3f(0.42f, 0.38f, 0.19f);
-//
-//	//ERROR_MSG(("Resolution: " + num2str(ResX) + " " + num2str(ResY)).c_str());
-//
-//	ray_march_resolution = abs(ray_march_resolution);
-//
-//	MarchResX = ResX*ray_march_resolution;
-//	MarchResY = ResY*ray_march_resolution;
-//	window = new sf::RenderWindow(screen_size, window_name, window_style, settings);
-//	window->setFramerateLimit(60);
-//	SetTW_Interface();
-//
-//	if (glewInit())
-//	{
-//		ERROR_MSG("Failed to initialize GLEW");
-//	}
-//
-//
-//	final_texture.create(ResX, ResY);
-//
-//	render_sprite.setTexture(final_texture);
-//	render_sprite.setPosition(0, 0);
-//	render_sprite.setScale(1, 1);
-//
-//	render_shader.LoadShaders(vert_glsl, frag_glsl);
-//	rshad = render_shader.getNativeHandle();
-//
-//	//create the textures
-//	for (int i = 0; i < PIPELINE_ITER; i++)
-//	{
-//		for (int j = 0; j < PIPELINE[i][1]; j++)
-//		{
-//			glGenTextures(1, &textures[i][j]);
-//			glBindTexture(GL_TEXTURE_2D, textures[i][j]);
-//			//HDR texture
-//			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, ResX / PIPELINE[i][0], ResY / PIPELINE[i][0], 0, GL_RGBA, GL_FLOAT, NULL);
-//			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//			textures_HID[i][j] = glGetUniformLocation(rshad, ("texture_" + num2str(i) + "_" + num2str(j)).c_str());
-//		}
-//	}
-//
-//	
-//
-//	/*for (int i = 0; i < TEXTURES_MAIN; i++)
-//	{
-//		glGenTextures(1, &main_texture[i]);
-//		glBindTexture(GL_TEXTURE_2D, main_texture[i]);
-//		//HDR texture
-//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, MarchResX, MarchResY, 0, GL_RGBA, GL_FLOAT, NULL);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//	}
-//
-//	for (int i = 0; i < TEXTURES_PER_ITER*PIPELINE_ITER - 1; i++)
-//	{
-//		glGenTextures(1, &buffer_texture[i]);
-//		glBindTexture(GL_TEXTURE_2D, buffer_texture[i]);
-//		//HDR texture
-//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, MarchResX, MarchResY, 0, GL_RGBA, GL_FLOAT, NULL);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//
-//	}*/
-//
-//	glfinal_texture = final_texture.getNativeHandle();
-//
-//
-//
-//	glGenFramebuffers(PIPELINE_ITER, &Framebuffer[0]);
-//
-//
-//	for (int i = 0; i < PIPELINE_ITER; i++)
-//	{
-//		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, Framebuffer[i]);
-//		int att = 0;
-//		if (i != PIPELINE_ITER - 1)
-//		{
-//			/*
-//			for (int j = 0; j < TEXTURES_PER_ITER; j++)
-//			{
-//				glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + att, GL_TEXTURE_2D, buffer_texture[i+ TEXTURES_PER_ITER*j], 0);
-//				att++;
-//			}
-//			if (i == 0)
-//			{
-//				for (int j = 0; j < TEXTURES_MAIN; j++)
-//				{	
-//					glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + att, GL_TEXTURE_2D, main_texture[j], 0);
-//					att++;
-//				}
-//			}*/
-//			for (int j = 0; j < PIPELINE[i][1]; j++)
-//			{
-//				glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + att, GL_TEXTURE_2D, textures[i][j], 0);
-//				att++;
-//			}
-//		}
-//		else
-//		{
-//			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, glfinal_texture, 0);
-//			att++;
-//		}
-//
-//		GLuint *attachments = new GLuint[att];
-//		for (int j = 0; j < att; j++)
-//		{
-//			attachments[j] = GL_COLOR_ATTACHMENT0 + j;
-//		}
-//
-//		glDrawBuffers(att, attachments);
-//	}
-//
-//
-//	
-//
-//	/*for (int i = 0; i < TEXTURES_MAIN; i++)
-//	{
-//		main_texture_HID[i] = glGetUniformLocation(rshad, ("main_texture_" + num2str(i)).c_str());
-//	}
-//
-//	for (int i = 0; i < TEXTURES_PER_ITER*PIPELINE_ITER - 1; i++)
-//	{
-//		buffer_texture_HID[i] = glGetUniformLocation(rshad, ("buffer_texture_" + num2str(i)).c_str());
-//	}*/
-//
-//
-//	//A square, needed to render the picture
-//	static const GLfloat g_vertex_buffer_data[] = {
-//		-1.0f, 1.0f, 0.0f,
-//		1.0f, 1.0f, 0.0f,
-//		1.0f, -1.0f, 0.0f,
-//		-1.0f, -1.0f, 0.0f,
-//	};
-//
-//	//texture coords on the quad
-//	static const GLfloat g_uv_buffer_data[] = {
-//		0.0f, 0.0f,
-//		1.0f, 0.0f,
-//		1.0f, 1.0f,
-//		0.0f, 1.0f,
-//	};
-//
-//
-//	glGenBuffers(1, &vertexbuffer);
-//	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-//
-//	glGenBuffers(1, &uvbuffer);
-//	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
-//
-//	// 1rst attribute buffer : vertices
-//	glEnableVertexAttribArray(0);
-//	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-//	glVertexAttribPointer(
-//		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-//		3,                  // size
-//		GL_FLOAT,           // type
-//		GL_FALSE,           // normalized?
-//		0,                  // stride
-//		(void*)0            // array buffer offset
-//	);
-//
-//	// 2nd attribute buffer : UVs
-//	glEnableVertexAttribArray(1);
-//	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-//	glVertexAttribPointer(
-//		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-//		2,                                // size : U+V => 2
-//		GL_FLOAT,                         // type
-//		GL_FALSE,                         // normalized?
-//		0,                                // stride
-//		(void*)0                          // array buffer offset
-//	);
-//	glDisableVertexAttribArray(0);
-//	glDisableVertexAttribArray(1);
-//
-//	CameraMat << 1, 0, 0,
-//				 0, 1, 0,
-//				 0, 0, 1;
-//
-//	CameraPosition << 0, -2, 0;
-//}
-//
-//void Engine::LoadFromConfig(string file)
-//{
-//	int increment = 0;
-//	ifstream config;
-//	config.open(file);
-//	if (config.fail())
-//	{
-//		ERROR_MSG("Failed to open the configuration file");
-//	}
-//	string line;
-//	while (getline(config, line))
-//	{
-//		if (line.substr(0, 1) != "#")
-//		{
-//			increment++;
-//			istringstream iss(line);
-//			float num;
-//			while ((iss >> num))
-//			{
-//				switch (increment)
-//				{
-//				case 1:
-//					fullscreen = num;
-//					
-//					if (fullscreen) 
-//					{
-//						screen_size = sf::VideoMode::getDesktopMode();
-//						window_style = sf::Style::Fullscreen;
-//					}
-//					else 
-//					{
-//						window_style = sf::Style::Close;
-//					}
-//					break;
-//				case 2:
-//					if (fullscreen)
-//					{
-//						ResX = screen_size.width;
-//					}
-//					else
-//					{
-//						ResX = num;
-//					}
-//					break;
-//				case 3:
-//					if (fullscreen)
-//					{
-//						ResY = screen_size.height;
-//					}
-//					else
-//					{
-//						ResY = num;
-//						screen_size = sf::VideoMode(ResX, ResY, 24);
-//					}
-//					break;
-//				case 4:
-//					ray_march_resolution = num;
-//					break;
-//				case 5:
-//					FOV = num;
-//					break;
-//				case 6:
-//					camspeed = num;
-//					break;
-//				case 7:
-//					roll_speed = num;
-//					break;
-//				case 8:
-//					SuperResolutionCondition = num;
-//					break;
-//				case 9:
-//					mouse_sensitivity = num;
-//					break;
-//				default:
-//					break;
-//				}
-//			}
-//		}
-//	}
-//}
-//
-//void Engine::SetTW_Interface()
-//{
-//	//TW interface
-//	TwInit(TW_OPENGL, NULL);
-//	TwWindowSize(ResX, ResY);
-//
-//	stats = TwNewBar("Statistics");
-//	TwDefine(" GLOBAL help='DeltaBeta engine demonstration' ");
-//
-//
-//
-//	// Change bar position
-//	int barPos[2] = { 16, 60 };
-//	TwSetParam(stats, NULL, "position", TW_PARAM_INT32, 2, &barPos);
-//	TwAddVarRO(stats, "FPS", TW_TYPE_FLOAT, &smoothfps, " label='FPS' ");
-//	TwAddVarRO(stats, "Time passed", TW_TYPE_FLOAT, &time, " label='Time passed' ");
-//	TwAddVarRO(stats, "CameraDirX", TW_TYPE_DIR3F, CameraDirX.data(), "");
-//	TwAddVarRO(stats, "CameraDirY", TW_TYPE_DIR3F, CameraDirY.data(), "");
-//	TwAddVarRO(stats, "CameraDirZ", TW_TYPE_DIR3F, CameraDirZ.data(), "");
-//	TwAddVarRO(stats, "CameraPosition", TW_TYPE_DIR3F, CameraPosition.data(), "");
-//	TwAddVarRO(stats, "RenderWidth", TW_TYPE_INT32, &MarchResX, "");
-//	TwAddVarRO(stats, "RenderHeight", TW_TYPE_INT32, &MarchResY, "");
-//	TwAddVarRO(stats, "WindowWidth", TW_TYPE_INT32, &ResX, "");
-//	TwAddVarRO(stats, "WindowHeight", TW_TYPE_INT32, &ResY, "");
-//	//TwAddVarRW(bar, "Camera speed", TW_TYPE_FLOAT, &sp, " min=0.005 max=0.5 step=0.005");
-//	//TwAddVarRW(bar, "Calculations per frame", TW_TYPE_INT32, &cpf, " min=1 max=500 step=1");
-//	settings = TwNewBar("Settings");
-//	
-//	TwEnumVal modeRender[] = // array used to describe the Scene::AnimMode enum values
-//	{
-//		{ 0,   "Normal" },
-//		{ 1,   "NoFX" },
-//		{ 2,   "Distance" },
-//		{ 3,   "Iterations" },
-//		{ 4,   "SurfNormal" },
-//		{ 5,   "PostProcessing" },
-//	};
-//	TwType modeType = TwDefineEnum("Mode", modeRender, 6);  // create a new TwType associated to the enum defined by the modeEV array
-//
-//
-//	TwAddVarRW(settings, "RenderMode", modeType, &RenderMode, " help='Change the current rendering mode.' ");
-//	TwAddVarRW(settings, "SuperResolution", TW_TYPE_FLOAT, &SuperResolutionCondition, "min=0 max=0.5 step=0.005");
-//	TwAddVarRW(settings, "FOV", TW_TYPE_FLOAT, &FOV, "min=20 max=160 step=1 help='Field of view, deg'");
-//	TwAddVarRW(settings, "MouseSensitivity", TW_TYPE_FLOAT, &mouse_sensitivity, "min=0.001 max=0.1 step=0.001");
-//	TwAddVarRW(settings, "CameraSpeed", TW_TYPE_FLOAT, &camspeed, "min=0.1 max=50 step=0.1");
-//	TwAddSeparator(settings, NULL, " group='Fractal parameters' ");
-//	
-//	TwAddVarRW(settings, "FractalIter", TW_TYPE_INT32, &iFracIter, "min=0 max=20  group='Fractal parameter");
-//	TwAddVarRW(settings, "FractalScale", TW_TYPE_FLOAT, &iFracScale, "min=0 max=5 step=0.01  group='Fractal parameter");
-//	TwAddVarRW(settings, "FractalAngle1", TW_TYPE_FLOAT, &iFracAng1, "min=-5 max=5 step=0.01  group='Fractal parameter");
-//	TwAddVarRW(settings, "FractalAngle2", TW_TYPE_FLOAT, &iFracAng2, "min=-5 max=5 step=0.01  group='Fractal parameter");
-//	TwAddVarRW(settings, "FractalShift", TW_TYPE_DIR3F, iFracShift.data(), " group='Fractal parameter");
-//	TwAddVarRW(settings, "FractalColor", TW_TYPE_COLOR3F, iFracCol.data(), " group='Fractal parameter");
-//	TwAddSeparator(settings, "sep1", NULL);
-//	TwDefine(" Settings/sep1 group='Fractal parameters' ");
-//	
-//	TwAddVarRW(settings, "Exposure", TW_TYPE_FLOAT, &exposure, "min=0.01 max=10 step=0.01");
-//	TwAddVarRW(settings, "Metallic", TW_TYPE_FLOAT, &metallic, "min=0 max=1 step=0.001");
-//	TwAddVarRW(settings, "Roughness", TW_TYPE_FLOAT, &roughness, "min=0 max=1 step=0.001");
-//	TwAddVarRW(settings, "LightRadius", TW_TYPE_FLOAT, &light_radius, "min=0 max=100 step=0.01");
-//	TwAddVarRW(settings, "LightPos", TW_TYPE_DIR3F, light.data(), "");
-//	TwAddVarRW(settings, "LightColor", TW_TYPE_DIR3F, light_color.data(), "");
-//
-//
-//	int barPos1[2] = { 16, 450 };
-//
-//	TwSetParam(settings, NULL, "position", TW_PARAM_INT32, 2, &barPos1);
-//
-//	TwDefine(" GLOBAL fontsize=3 ");
-//}
-//
-//void Engine::Render()
-//{
-//	glUseProgram(rshad);
-//
-//	//send data to GPU
-//	render_shader.setUniform("RayMarchResolution", MarchResX, MarchResY);
-//	render_shader.setUniform("time", time);
-//	render_shader.setUniform("CameraDirMatrix", CameraMat, false);
-//	render_shader.setUniform("FOV", FOV);
-//	render_shader.setUniform("CameraPosition", CameraPosition);
-//	render_shader.setUniform("SuperResCond", SuperResolutionCondition);
-//	render_shader.setUniform("RenderMode", (int)RenderMode);
-//	render_shader.setUniform("MainResolution", ResX, ResY);
-//
-//	render_shader.setUniform("iFracIter", (int)iFracIter);
-//	render_shader.setUniform("iFracScale", iFracScale);
-//	render_shader.setUniform("iFracAng1", iFracAng1);
-//	render_shader.setUniform("iFracAng2", iFracAng2);
-//	render_shader.setUniform("iFracShift", iFracShift[0], iFracShift[1], iFracShift[2]);
-//	render_shader.setUniform("iFracCol", iFracCol[0], iFracCol[1], iFracCol[2]);
-//
-//	render_shader.setUniform("Exposure", exposure);
-//	render_shader.setUniform("metallic", metallic);
-//	render_shader.setUniform("roughness", roughness);
-//	render_shader.setUniform("LIGHT_POSITION", light[0], light[1], light[2]);
-//	render_shader.setUniform("LIGHT_COLOR", light_color[0], light_color[1], light_color[2]);
-//	render_shader.setUniform("LIGHT_RADIUS", light_radius);
-//	//set textures
-//	int a = 0;
-//
-//	for (int i = 0; i < PIPELINE_ITER-1; i++)
-//	{
-//		for (int j = 0; j < PIPELINE[i][1]; j++)
-//		{
-//			glActiveTexture(GL_TEXTURE0 + a);
-//			glBindTexture(GL_TEXTURE_2D, textures[i][j]);
-//			glUniform1i(textures_HID[i][j], a);
-//			a++;
-//		}
-//	}
-//
-//	for (int i = 0; i < PIPELINE_ITER; i++)
-//	{
-//		glViewport(0, 0, ResX / PIPELINE[i][0], ResY / PIPELINE[i][0]);
-//		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, Framebuffer[i]);
-//		render_shader.setUniform("RenderPipelineIter", i);
-//		DrawQuad();
-//	}
-//
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, 0);
-//	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-//	glUseProgram(0);
-//}
-//
-//void Engine::DrawQuad()
-//{
-//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//
-//	glEnableVertexAttribArray(0);
-//	glEnableVertexAttribArray(1);
-//
-//	glDrawArrays(GL_QUADS, 0, 4);
-//
-//	glDisableVertexAttribArray(0);
-//	glDisableVertexAttribArray(1);
-//
-//	glFinish();
-//}
-//
-//bool Engine::Update()
-//{
-//	window->clear(sf::Color::Black);
-//	ManageEvents();
-//	
-//	Render();
-//
-//	window->draw(render_sprite);
-//
-//	//Refresh tweak bar
-//	TwRefreshBar(stats);
-//	TwRefreshBar(settings);
-//	TwDraw();
-//
-//	window->display();
-//
-//	//fps and time calculations
-//	float dt = timer.getElapsedTime().asSeconds();
-//	fps = 1 / dt;
-//	if (time == 0)
-//	{
-//		smoothfps = fps;
-//	}
-//	else
-//	{
-//		smoothfps = smoothfps*0.95 + 0.05*fps;
-//	}
-//	time += dt;
-//
-//	timer.restart();
-//	return true;
-//}
-//
-//bool Engine::Running()
-//{
-//	return running;
-//}
-//
-//bool Engine::SetFOV(float fov)
-//{
-//	FOV = fov;
-//	return true;
-//}
-//
-//
-//
+#include "Engine.h"
+
+Engine::Engine(sf::Texture *texture): time(0.f)
+{
+	//LoadFromConfig(config);
+	prev_mouse = sf::Vector2f(0.f, 0.f);
+	CL = new OpenCL(kernel_cl);
+	depth = new CLRender(kernel_depth, texture->getNativeHandle(), 1, texture->getSize().x, texture->getSize().y, 1, 1, CL);
+	depth->UseWorldModel(&world);
+}
+
+void Engine::SetRenderingTexture(sf::Texture texture)
+{
+}
+
+void Engine::Update(sf::RenderWindow *window)
+{
+	float dt = timer.getElapsedTime().asSeconds();
+	time += dt;
+
+	sf::Event event;
+	while (window->pollEvent(event))
+	{
+		if (event.type == sf::Event::Closed) {
+			window->close();
+			break;
+		}
+		else if (event.type == sf::Event::KeyPressed) {
+			const sf::Keyboard::Key keycode = event.key.code;
+			if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
+
+			if (keycode == sf::Keyboard::Escape) {
+				window->close();
+			}
+
+		}
+		else if (event.type == sf::Event::MouseButtonReleased)
+		{
+
+		}
+		else if (event.type == sf::Event::MouseMoved)
+		{
+			sf::Vector2f mouse = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
+			sf::Vector2f dmouse = mouse - prev_mouse;
+
+			world.GetCamera()->RotateX(dmouse.x);
+			world.GetCamera()->RotateY(dmouse.y);
+
+			prev_mouse = mouse;
+		}
+	}
+	
+	timer.restart();
+}
+
+bool Engine::Render()
+{
+	depth->Run();
+	return true;
+}
+
+void Engine::LoadFromConfig(string file)
+{
+	int increment = 0;
+	ifstream config;
+	config.open(file);
+	if (config.fail())
+	{
+		ERROR_MSG("Failed to open the configuration file");
+	}
+	string line;
+	while (getline(config, line))
+	{
+		if (line.substr(0, 1) != "#")
+		{
+			increment++;
+			istringstream iss(line);
+			float num;
+			while ((iss >> num))
+			{
+				switch (increment)
+				{
+				case 1:
+					world.GetCamera()->SetFOV(num);
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
+}
+
+void Engine::Draw()
+{
+}

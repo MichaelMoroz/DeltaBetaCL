@@ -11,6 +11,8 @@ float sfrand( int *seed )
     return( res-3.0f );
 }
 
+#define PI 3.14159265f
+#define DEG 0.0174533f
 
 /*
 float de_sphere(float4 p, float r) {
@@ -205,15 +207,23 @@ float4 render_point(vec2 pos, vec2 mres, vec2 cres, float4 data)
 	return march_data;
 }*/
 
-///MAIN FUNCIONS
+///MAIN FUNCTIONS
 
 //find distance to surface(+ h and num of iterations) for each pixel
 __kernel void first_pass_render(__read_write image2d_t render, __read_write image2d_t prev_render, 
-	float4 cam_pos, float4 dirx, float4 diry, float4 dirz, float4 resolution, int step)
+	float4 cam_pos, float4 dirx, float4 diry, float4 dirz, float4 resolution, float4 camera, float4 camera2, int step)
 {
+	//pixel coordinate [0..W/H]
+	int2 pixel = (int2)(get_global_id(0), get_global_id(1));
+	//float pixel coordinate [0..1]
+	float2 step_resolution = resolution.xy/pow(resolution.w,step);
+	float2 UV = (float2)(pixel.x,pixel.y)/step_resolution;
+	float2 pos = 2.f*UV-1.f;
+	float FOV = camera.x*DEG;
+	float4 ray = normalize(dirx + FOV*pos.x*dirz + FOV*pos.y*diry);
+	float4 position = cam_pos + camera2.x*pos.x*dirz + camera2.x*pos.y*diry;
 	
-	
-	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(1,0,0,1));
+	write_imagef(render, pixel, (float4)(ray.x,ray.y,ray.z,1));
 }
 
 //calculate shadow rays, reflection rays and refraction rays
@@ -225,4 +235,4 @@ __kernel void first_pass_render(__read_write image2d_t render, __read_write imag
 //calculate texturing and lighting
 
 
-//calculate bloom, blur and dof
+//calculate bloom, blur, dof and speckles 

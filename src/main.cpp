@@ -5,6 +5,7 @@
 #include <Camera.h>
 #include <CLFunction.h>
 #include <CLRender.h>
+#include <Engine.h>
 
 #include <SFML/Graphics.hpp>
 #include <sys/types.h>
@@ -51,51 +52,28 @@ int main(int argc, char *argv[]) {
 		std::cerr << "failed to init GLEW" << std::endl;
 	}
 
-
-
-	//Load opencl code and compile it
-	OpenCL CL("OpenCL\\kernel.c");
 	sf::Image img;
-	img.create(1024, 512, sf::Color::White);
+	img.create(1024, 1024, sf::Color::White);
 	sf::Texture test_render;
 	test_render.loadFromImage(img);
-	Camera camera;
-	CLRender RND("first_pass_render", test_render.getNativeHandle(), 1, 1024, 512, 1, 1, &CL);
 	sf::Sprite spr;
 	spr.setTexture(test_render);
 
-	RND.Run(camera);
+	Engine engine(&test_render);
+	window.setActive(true);
 	float fps = 0, smoothfps = 0, time = 0;
 	while (window.isOpen())
 	{
 		
 		window.clear(sf::Color::Black);
-		sf::Event event;
-		
-		auto LMB = sf::Mouse::isButtonPressed(sf::Mouse::Left);
-		auto RMB = sf::Mouse::isButtonPressed(sf::Mouse::Right);
-		auto MMB = sf::Mouse::isButtonPressed(sf::Mouse::Middle);
 
-		while (window.pollEvent(event))
-		{
-			if (event.type == sf::Event::Closed) {
-				window.close();
-				break;
-			}
-			else if (event.type == sf::Event::KeyPressed) {
-				const sf::Keyboard::Key keycode = event.key.code;
-				if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
-
-				if (keycode == sf::Keyboard::Escape) {
-					window.close();
-				}
-
-			}
-
-		}
+		engine.Update(&window);
+	
+		engine.Render();
 
 		window.draw(spr);
 		window.display();
+		
 
 		//fps and time calculations
 		float dt = timer.getElapsedTime().asSeconds();

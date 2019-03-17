@@ -2,7 +2,7 @@
 
 
 CLRender::CLRender(string name, int textures, int width, int height, int lvl, int scale, OpenCL *a) :
-	cl(a), W(width), H(height), S(scale), L(lvl)
+	cl(a), W(width), H(height), S(scale), L(lvl), world(NULL)
 {
 	clImage = new Image2D*[lvl];
 	for (int i = 0; i < lvl; i++)
@@ -23,7 +23,7 @@ CLRender::CLRender(string name, int textures, int width, int height, int lvl, in
 }
 
 CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int height, int lvl, int scale, OpenCL *a) :
-	cl(a), W(width), H(height), S(scale), L(lvl), textures(txtr)
+	cl(a), W(width), H(height), S(scale), L(lvl), textures(txtr), world(NULL)
 {
 	clImage = new Image2D*[lvl];
 	for (int i = 0; i < lvl; i++)
@@ -52,52 +52,68 @@ CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int heigh
 	render.Initialize(name, cl, 1, 1, width, height);
 }
 
-void CLRender::Run(Camera & Cam)
+bool CLRender::Run()
 {
-	//set camera parameters
-	vec4 data = vec4(Cam.GetPosition(), 0);
-	render.SetArg(2 * textures, 4, glm::value_ptr(data));
-	data = vec4(Cam.GetDirX(), 0);
-	render.SetArg(2 * textures+1, 4, glm::value_ptr(data));
-	data = vec4(Cam.GetDirY(), 0);
-	render.SetArg(2 * textures+2, 4, glm::value_ptr(data));
-	data = vec4(Cam.GetDirZ(), 0);
-	render.SetArg(2 * textures+3, 4, glm::value_ptr(data));
-	data = vec4(float(W), float(H), float(L), float(S));
-	render.SetArg(2 * textures+4, 4, glm::value_ptr(data));
-
-	//render through all resolutions
-	for (int i = 0; i < L; i++)
+	if (world == NULL)
 	{
-		int w = W*pow(0.5, L - i - 1);
-		int h = H*pow(0.5, L - i - 1);
-		render.SetRange(1, 1, w, h);
-		//set all current textures for this resolution
-		for (int j = 0; j < textures; j++)
+		ERROR_MSG("No world model to render.");
+		return false;
+	} 
+	else
+	{
+		//set camera parameters
+		vec4 data = vec4(world->GetCamera()->GetPosition(), 0);
+		render.SetArg(2 * textures, 4, glm::value_ptr(data));
+		data = vec4(world->GetCamera()->GetDirX(), 0);
+		render.SetArg(2 * textures + 1, 4, glm::value_ptr(data));
+		data = vec4(world->GetCamera()->GetDirY(), 0);
+		render.SetArg(2 * textures + 2, 4, glm::value_ptr(data));
+		data = vec4(world->GetCamera()->GetDirZ(), 0);
+		render.SetArg(2 * textures + 3, 4, glm::value_ptr(data));
+		data = vec4(float(W), float(H), float(L), float(S));
+		render.SetArg(2 * textures + 4, 4, glm::value_ptr(data));
+		data = world->GetCamera()->GetCameraProperties();
+		render.SetArg(2 * textures + 5, 4, glm::value_ptr(data));
+		data = world->GetCamera()->GetCameraProperties2();
+		render.SetArg(2 * textures + 6, 4, glm::value_ptr(data));
+
+		//render through all resolutions
+		for (int i = 0; i < L; i++)
 		{
-			render.SetArg(j, clImage[i][j]);
-		}
-		//set all previous textures 
-		for (int j = 0; j < textures; j++)
-		{
-			if (i == 0) // if initial step
+			int w = W*pow(0.5, L - i - 1);
+			int h = H*pow(0.5, L - i - 1);
+			render.SetRange(1, 1, w, h);
+			//set all current textures for this resolution
+			for (int j = 0; j < textures; j++)
 			{
-				render.SetArg(j + textures, clImage[i][j]);
+				render.SetArg(j, clImage[i][j]);
 			}
-			else
+			//set all previous textures 
+			for (int j = 0; j < textures; j++)
 			{
-				render.SetArg(j + textures, clImage[i - 1][j]);
+				if (i == 0) // if initial step
+				{
+					render.SetArg(j + textures, clImage[i][j]);
+				}
+				else
+				{
+					render.SetArg(j + textures, clImage[i - 1][j]);
+				}
 			}
+			render.SetArg(2 * textures + 7, i);
+			render.RFlush();
 		}
-		render.SetArg(2 * textures + 5, i);
-		render.RFlush();
+		return true;
 	}
 }
 
-void CLRender::SetInputTextures(GLuint * textures, int N)
+void CLRender::SetInputTextures(Image2D * textures, int N)
 {
+
 }
 
-void CLRender::UseWorldModel()
+void CLRender::UseWorldModel(World * w)
 {
+	world = w;
 }
+
