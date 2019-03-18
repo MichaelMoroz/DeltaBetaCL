@@ -2,6 +2,7 @@
 
 Engine::Engine(sf::Texture *texture): time(0.f)
 {
+	memset(all_keys, false, sf::Keyboard::KeyCount);
 	//LoadFromConfig(config);
 	prev_mouse = sf::Vector2f(0.f, 0.f);
 	CL = new OpenCL(kernel_cl);
@@ -29,17 +30,18 @@ void Engine::Update(sf::RenderWindow *window)
 
 	sf::Event event;
 	vec3 dx = vec3(0.f);
+
 	while (window->pollEvent(event))
 	{
 		if (event.type == sf::Event::Closed) {
 			window->close();
 			break;
 		}
-		else if (event.type == sf::Event::MouseButtonReleased)
+		if (event.type == sf::Event::MouseButtonReleased)
 		{
 
 		}
-		else if (event.type == sf::Event::MouseMoved)
+		if (event.type == sf::Event::MouseMoved)
 		{
 			sf::Vector2f mouse = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
 			sf::Vector2f dmouse = mouse - prev_mouse;
@@ -50,36 +52,46 @@ void Engine::Update(sf::RenderWindow *window)
 			}
 			prev_mouse = mouse;
 		}
-		else if (event.type == sf::Event::KeyPressed) {
+		if (event.type == sf::Event::KeyPressed)
+		{
 			const sf::Keyboard::Key keycode = event.key.code;
 			if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
 
 			if (keycode == sf::Keyboard::Escape) {
 				window->close();
 			}
-			
-			float speed = 0.01;
-			if (keycode == sf::Keyboard::W) {
-				dx.x += speed;
-			}
-			if (keycode == sf::Keyboard::S) {
-				dx.x -= speed;
-			}
-			if (keycode == sf::Keyboard::A) {
-				dx.z += speed;
-			}
-			if (keycode == sf::Keyboard::A) {
-				dx.z -= speed;
-			}
-			if (keycode == sf::Keyboard::Q) {
-				world.GetCamera()->Roll(0.001);
-			}
-			if (keycode == sf::Keyboard::E) {
-				world.GetCamera()->Roll(-0.001);
-			}
-			
+		
+			all_keys[keycode] = true;
+		}
+		else if (event.type == sf::Event::KeyReleased) 
+		{
+			const sf::Keyboard::Key keycode = event.key.code;
+			if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
+			all_keys[keycode] = false;
 		}
 	}
+
+	float speed = 0.075f;
+
+	if (all_keys[sf::Keyboard::W]) {
+		dx.x += speed;
+	}
+	if (all_keys[sf::Keyboard::S]) {
+		dx.x -= speed;
+	}
+	if (all_keys[sf::Keyboard::A]) {
+		dx.z -= speed;
+	}
+	if (all_keys[sf::Keyboard::D]) {
+		dx.z += speed;
+	}
+	if (all_keys[sf::Keyboard::Q]) {
+		world.GetCamera()->Roll(0.005);
+	}
+	if (all_keys[sf::Keyboard::E]) {
+		world.GetCamera()->Roll(-0.005);
+	}
+
 	world.GetCamera()->Move(dx);
 	world.GetCamera()->Update(0.01);
 	timer.restart();

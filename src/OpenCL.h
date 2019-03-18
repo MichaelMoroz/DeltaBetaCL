@@ -18,8 +18,6 @@
 #define ERROR_MSG(x) std::cerr << x << std::endl;
 #endif
 
-#pragma comment(lib, "OpenCL.lib")
-
 using namespace cl;
 using namespace std;
 

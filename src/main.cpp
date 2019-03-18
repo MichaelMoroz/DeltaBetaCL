@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 	settings.minorVersion = 0;
 	 
 	sf::RenderWindow window(window_size, "Engine Demo", sf::Style::Close, settings);
-	
+	window.setFramerateLimit(60);
 	window.setVerticalSyncEnabled(true);
 	if (glewInit())
 	{

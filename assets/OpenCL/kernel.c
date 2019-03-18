@@ -228,7 +228,12 @@ __kernel void first_pass_render(__read_write image2d_t render, __read_write imag
 	float FOV = camera.x*DEG;
 	float4 ray = normalize(dirx + FOV*pos.x*dirz + FOV*pos.y*diry);
 	float4 position = cam_pos + camera2.x*pos.x*dirz + camera2.x*pos.y*diry;
-	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(ray.x,ray.y,ray.z,1.f));
+	float4 march_data = (float4)(0.f, 0.f, 0.f, 0.f);
+	float4 limits = (float4)(20.f, 0.f, 256.f, 0.f);
+	float cone_angle = 2 * FOV / step_resolution.x;
+	cone_march(ray, position, &march_data, limits, cone_angle, cone_angle);
+
+	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(1-march_data.x*0.1f, 1 - march_data.x*0.1f, 1 - march_data.x*0.1f,1.f));
 }
 
 //calculate shadow rays, reflection rays and refraction rays

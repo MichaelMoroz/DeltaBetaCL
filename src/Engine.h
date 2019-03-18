@@ -14,6 +14,15 @@ static const string kernel_post = "";
 
 class Engine
 {
+private:
+	bool all_keys[sf::Keyboard::KeyCount];
+	OpenCL *CL;
+	World world;
+	CLRender *depth, *texturing, *post_processing;
+	float time, fps, smoothfps;
+	sf::Vector2f prev_mouse;
+	sf::Clock timer;
+
 public:
 	Engine(sf::Texture *texture);
 
@@ -25,14 +34,6 @@ protected:
 	void LoadFromConfig(string file);
 	void Draw();
 
-private:
-	OpenCL *CL;
-	World world;
-	CLRender *depth, *texturing, *post_processing;
-
-	float time, fps, smoothfps;
-	sf::Vector2f prev_mouse;
-	sf::Clock timer;
 };
 
 
