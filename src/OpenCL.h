@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <SFML/OpenGL.hpp>
 #include <CL/cl.hpp>
+#include <CL/cl_gl.h>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -16,6 +17,8 @@
 #else
 #define ERROR_MSG(x) std::cerr << x << std::endl;
 #endif
+
+#pragma comment(lib, "OpenCL.lib")
 
 using namespace cl;
 using namespace std;
@@ -77,7 +80,7 @@ public:
 		}
 
 		bool found_context = 0;
-
+		
 		for (int i = 0; i < all_platforms.size(); i++)
 		{
 			default_platform = all_platforms[i];
@@ -98,8 +101,6 @@ public:
 				CL_CONTEXT_PLATFORM,
 				(cl_context_properties)default_platform(), 0
 			};
-
-
 
 			// Look for the compatible context.
 			for (int j = 0; j < all_devices.size(); j++)

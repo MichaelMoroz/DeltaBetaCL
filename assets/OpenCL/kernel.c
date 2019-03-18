@@ -13,6 +13,7 @@ float sfrand( int *seed )
 
 #define PI 3.14159265f
 #define DEG 0.0174533f
+#define MIN_DIST 1e-5
 
 /*
 
@@ -159,7 +160,7 @@ float de_sphere(float4 p, float r) {
 
 float SDF(float4 p)
 {
-	p = p - (float4)(4.f, -3.5, 1.f);
+	p = p - (float4)(4.f, -3.5, 1.f,0.f);
 	//rotX(p, 3.14159f*0.08f);
 	//rotY(p, 3.14159f*0.2f);
 	float DE = de_sphere(p, 2);
@@ -167,14 +168,14 @@ float SDF(float4 p)
 }
 
 
-void cone_march(float4 ray, float4 &p, float4 &march_data, float4 limits, float cone_angle, float cone_angle_max)
+void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float cone_angle, float cone_angle_max)
 {
-	float h, n, cone_radius, td = march_data.x;
+	float h, n, cone_radius, td = march_data->x;
 	float NdotR = 0, prev_h = 1e10;
 	int object_type = 0; //nothing
 	float subsurf_td = 0; // for subsurface scattering and/or soft shadows
 
-	for (; ((march_data.z < limits.z)); march_data.z += 1.f)
+	for (; ((march_data->z < limits.z)); march_data->z += 1.f)
 	{
 		cone_radius = max(MIN_DIST, td*cone_angle);
 
@@ -194,7 +195,7 @@ void cone_march(float4 ray, float4 &p, float4 &march_data, float4 limits, float 
 
 		if (td < limits.x)
 		{
-			march_data.y = 1;
+			march_data->y = 1;
 		}
 		else
 		{
@@ -206,8 +207,8 @@ void cone_march(float4 ray, float4 &p, float4 &march_data, float4 limits, float 
 		prev_h = h;
 	}
 	//whiout +h we are losing 1 SDF calcualtion each ray, aka slight optimization
-	march_data.x = td + h;
-	march_data.y = h;
+	march_data->x = td + h;
+	march_data->y = h;
 	//p = p + march_data.x*ray;
 	//march_data.z += h / cone_radius;
 }

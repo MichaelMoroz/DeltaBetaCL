@@ -2,7 +2,7 @@
 
 
 CLRender::CLRender(string name, int textures, int width, int height, int lvl, int scale, OpenCL *a) :
-	cl(a), W(width), H(height), S(scale), L(lvl), world(NULL)
+	cl(a), W(width), H(height), S(scale), L(lvl), world(NULL), texture(NULL)
 {
 	clImage = new Image2D*[lvl];
 	for (int i = 0; i < lvl; i++)
@@ -23,7 +23,7 @@ CLRender::CLRender(string name, int textures, int width, int height, int lvl, in
 }
 
 CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int height, int lvl, int scale, OpenCL *a) :
-	cl(a), W(width), H(height), S(scale), L(lvl), textures(txtr), world(NULL)
+	cl(a), W(width), H(height), S(scale), L(lvl), textures(txtr), world(NULL), texture(textureID)
 {
 	clImage = new Image2D*[lvl];
 	for (int i = 0; i < lvl; i++)
@@ -61,6 +61,8 @@ bool CLRender::Run()
 	} 
 	else
 	{
+		if (texture != NULL)
+			clEnqueueAcquireGLObjects(cl->queue(), 1, &clImage[L-1][0](), 0, 0, 0);
 		//set camera parameters
 		vec4 data = vec4(world->GetCamera()->GetPosition(), 0);
 		render.SetArg(2 * textures, 4, glm::value_ptr(data));
@@ -82,6 +84,7 @@ bool CLRender::Run()
 		{
 			int w = W*pow(0.5, L - i - 1);
 			int h = H*pow(0.5, L - i - 1);
+			//use maximal possible group size
 			render.SetRange(floor(sqrt(cl->group_size[0])), floor(sqrt(cl->group_size[0])), w, h);
 			//set all current textures for this resolution
 			for (int j = 0; j < textures; j++)
@@ -103,7 +106,9 @@ bool CLRender::Run()
 			render.SetArg(2 * textures + 7, i);
 			render.RFlush();
 		}
-		
+
+		if (texture != NULL)
+			clEnqueueReleaseGLObjects(cl->queue(), 1, &clImage[L - 1][0](), 0, 0, 0);
 		return true;
 	}
 }

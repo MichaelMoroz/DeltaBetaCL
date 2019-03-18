@@ -71,12 +71,10 @@ void Engine::Update(sf::RenderWindow *window)
 			if (keycode == sf::Keyboard::A) {
 				dx.z -= speed;
 			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-			{
+			if (keycode == sf::Keyboard::Q) {
 				world.GetCamera()->Roll(0.001);
 			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
-			{
+			if (keycode == sf::Keyboard::E) {
 				world.GetCamera()->Roll(-0.001);
 			}
 			

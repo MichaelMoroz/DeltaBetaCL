@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 	window.setVerticalSyncEnabled(true);
 	if (glewInit())
 	{
-		std::cerr << "failed to init GLEW" << std::endl;
+		ErrMsg("failed to init GLEW");
 	}
 
 	sf::Image img;

@@ -25,4 +25,5 @@ private:
 	Image2D **clImage;
 	int W, H, L, S, textures;
 	OpenCL *cl;
+	GLuint texture;
 };
