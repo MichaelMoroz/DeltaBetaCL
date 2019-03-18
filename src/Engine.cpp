@@ -86,10 +86,10 @@ void Engine::Update(sf::RenderWindow *window)
 		dx.z += speed;
 	}
 	if (all_keys[sf::Keyboard::Q]) {
-		world.GetCamera()->Roll(0.005);
+		world.GetCamera()->Roll(0.0005);
 	}
 	if (all_keys[sf::Keyboard::E]) {
-		world.GetCamera()->Roll(-0.005);
+		world.GetCamera()->Roll(-0.0005);
 	}
 
 	world.GetCamera()->Move(dx);

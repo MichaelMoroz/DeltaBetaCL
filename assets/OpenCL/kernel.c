@@ -158,12 +158,17 @@ float de_sphere(float4 p, float r) {
 	return length(p) - r;
 }
 
+float de_box(float4 p, float4 s) {
+	float4 a = fabs(p) - s;
+	return (min(max(max(a.x, a.y), a.z), 0.0f) + length(max(a, 0.0f)));
+}
+
 float SDF(float4 p)
 {
 	p = p - (float4)(4.f, -3.5, 1.f,0.f);
 	//rotX(p, 3.14159f*0.08f);
 	//rotY(p, 3.14159f*0.2f);
-	float DE = de_sphere(p, 2);
+	float DE = de_box(p, (float4)(3.f,2.f,2.5f,0.f));
 	return DE;
 }
 
@@ -210,7 +215,7 @@ void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float c
 	march_data->x = td + h;
 	march_data->y = h;
 	//p = p + march_data.x*ray;
-	//march_data.z += h / cone_radius;
+	march_data->z += sin(h / cone_radius);
 }
 
 ///MAIN FUNCTIONS
@@ -233,7 +238,7 @@ __kernel void first_pass_render(__read_write image2d_t render, __read_write imag
 	float cone_angle = 2 * FOV / step_resolution.x;
 	cone_march(ray, position, &march_data, limits, cone_angle, cone_angle);
 
-	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(1-march_data.x*0.1f, 1 - march_data.x*0.1f, 1 - march_data.x*0.1f,1.f));
+	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(march_data.z*0.005f, 1-march_data.z*0.02f, march_data.z*0.02f,1.f));
 }
 
 //calculate shadow rays, reflection rays and refraction rays
