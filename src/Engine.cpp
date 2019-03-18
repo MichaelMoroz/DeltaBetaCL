@@ -28,6 +28,7 @@ void Engine::Update(sf::RenderWindow *window)
 	time += dt;
 
 	sf::Event event;
+	vec3 dx = vec3(0.f);
 	while (window->pollEvent(event))
 	{
 		if (event.type == sf::Event::Closed) {
@@ -56,9 +57,32 @@ void Engine::Update(sf::RenderWindow *window)
 			if (keycode == sf::Keyboard::Escape) {
 				window->close();
 			}
-
+			
+			float speed = 0.01;
+			if (keycode == sf::Keyboard::W) {
+				dx.x += speed;
+			}
+			if (keycode == sf::Keyboard::S) {
+				dx.x -= speed;
+			}
+			if (keycode == sf::Keyboard::A) {
+				dx.z += speed;
+			}
+			if (keycode == sf::Keyboard::A) {
+				dx.z -= speed;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+			{
+				world.GetCamera()->Roll(0.001);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+			{
+				world.GetCamera()->Roll(-0.001);
+			}
+			
 		}
 	}
+	world.GetCamera()->Move(dx);
 	world.GetCamera()->Update(0.01);
 	timer.restart();
 }

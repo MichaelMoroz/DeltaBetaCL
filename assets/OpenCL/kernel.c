@@ -15,9 +15,7 @@ float sfrand( int *seed )
 #define DEG 0.0174533f
 
 /*
-float de_sphere(float4 p, float r) {
-	return length(p) - r;
-}
+
 
 float de_box(float4 p, float4 s) {
 	float4 a = fabs(p) - s;
@@ -115,14 +113,6 @@ float4 col_fractal(float4 p)
 	return orbit;
 }
 
-float SDF(float4 p)
-{
-	p = p - (float4)(4.f, -3.5, 1.f);
-	//rotX(p, 3.14159f*0.08f);
-	//rotY(p, 3.14159f*0.2f);
-	float DE = de_sphere(p, 2);
-	return DE;
-}
 
 float4 CF(float4 p)
 {
@@ -143,6 +133,39 @@ void GetCamera(vec2 pos, vec2 cres, float4& ray, float4 &p, float &pix_angle)
 	p = iCameraPos + transpose(CDM)*(float4)(0, -posn.y*CAMERA_SIZE, posn.x*CAMERA_SIZE);
 	pix_angle = FOV*PI / (180.f*cres.x);
 }
+
+
+void SampleRay(float4 ray, float4 p, float min_angle, float pix_angle, float4 &march_data)
+{
+	cone_march(ray, p, march_data, (float4)(MAX_DIST, 0, MAX_MARCHES), min_angle, pix_angle);
+}
+
+float4 render_point(vec2 pos, vec2 mres, vec2 cres, float4 data)
+{
+	float4 ray, p;
+	float pix_angle;
+	GetCamera(pos, cres, ray, p, pix_angle);
+
+	float4 march_data = data;
+	float dres = mres.x / cres.x;
+	SampleRay(ray, p, pix_angle / dres, pix_angle, march_data);
+
+	return march_data;
+}*/
+
+float de_sphere(float4 p, float r) {
+	return length(p) - r;
+}
+
+float SDF(float4 p)
+{
+	p = p - (float4)(4.f, -3.5, 1.f);
+	//rotX(p, 3.14159f*0.08f);
+	//rotY(p, 3.14159f*0.2f);
+	float DE = de_sphere(p, 2);
+	return DE;
+}
+
 
 void cone_march(float4 ray, float4 &p, float4 &march_data, float4 limits, float cone_angle, float cone_angle_max)
 {
@@ -188,24 +211,6 @@ void cone_march(float4 ray, float4 &p, float4 &march_data, float4 limits, float 
 	//p = p + march_data.x*ray;
 	//march_data.z += h / cone_radius;
 }
-
-void SampleRay(float4 ray, float4 p, float min_angle, float pix_angle, float4 &march_data)
-{
-	cone_march(ray, p, march_data, (float4)(MAX_DIST, 0, MAX_MARCHES), min_angle, pix_angle);
-}
-
-float4 render_point(vec2 pos, vec2 mres, vec2 cres, float4 data)
-{
-	float4 ray, p;
-	float pix_angle;
-	GetCamera(pos, cres, ray, p, pix_angle);
-
-	float4 march_data = data;
-	float dres = mres.x / cres.x;
-	SampleRay(ray, p, pix_angle / dres, pix_angle, march_data);
-
-	return march_data;
-}*/
 
 ///MAIN FUNCTIONS
 

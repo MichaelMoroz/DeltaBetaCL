@@ -82,7 +82,7 @@ bool CLRender::Run()
 		{
 			int w = W*pow(0.5, L - i - 1);
 			int h = H*pow(0.5, L - i - 1);
-			render.SetRange(16, 16, w, h);
+			render.SetRange(floor(sqrt(cl->group_size[0])), floor(sqrt(cl->group_size[0])), w, h);
 			//set all current textures for this resolution
 			for (int j = 0; j < textures; j++)
 			{

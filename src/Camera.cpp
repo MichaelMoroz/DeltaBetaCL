@@ -51,7 +51,7 @@ void Camera::Shift(vec3 dx)
 
 void Camera::Move(vec3 dv)
 {
-	velocity += dv;
+	velocity += dv.x*GetDirX() + dv.y*GetDirY() + dv.z*GetDirZ();
 }
 
 void Camera::RotateX(float a)
