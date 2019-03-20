@@ -14,88 +14,14 @@ float sfrand( int *seed )
 #define PI 3.14159265f
 #define DEG 0.0174533f
 #define MIN_DIST 1e-5
-
+#define iFracScale 1.8f
+#define iFracAng1 -0.12f
+#define iFracAng2 0.5f
+#define iFracShift (float4)(-2.12f, -2.75f, 0.49f,0.f)
+#define iFracIter 16
 /*
 
 
-float de_box(float4 p, float4 s) {
-	float4 a = fabs(p) - s;
-	return (min(max(max(a.x, a.y), a.z), 0.0f) + length(max(a, 0.0f)));
-}
-
-float sdPlane(float4 p, float4 n)
-{
-	// n must be normalized
-	return dot((float4)(p.x, p.y, p.z, 1.f), n);
-}
-
-void planeFold(float4 *z, float4 n, float d) {
-	*z -= 2.0f * min((float4)(0.0f, 0.0f, 0.0f, 0.0f), dot(*z, n) - d) * n;
-}
-
-void sierpinskiFold(float4 *z) {
-	float a = min(*z.x + *z.y, 0.0f);
-	*z.x -= a; *z.y -= a;
-	a = min(*z.x + *z.z, 0.0f);
-	*z.x -= a; *z.z -= a;
-	a = min(*z.y + *z.z, 0.0f);
-	*z.y -= a; *z.z -= a;
-}
-
-void mengerFold(float4 *z) {
-	float a = min(z.x - z.y, 0.f);
-	z.x -= a; z.y += a;
-	a = min(z.x - z.z, 0.f);
-	z.x -= a; z.z += a;
-	a = min(z.y - z.z, 0.f);
-	z.y -= a; z.z += a;
-}
-
-void boxFold(float4 *z, float4 r) {
-	z = clamp(z, -r, r) * 2.f - z;
-}
-
-void rotX(float4 *z, float s, float c) {
-	z.y = c*z.y + s*z.z;
-	z.z = c*z.z - s*z.y;
-}
-
-void rotY(float4 *z, float s, float c) {
-	//???
-	z.x = c*z.x - s*z.z;
-	z.z = c*z.z + s*z.x;
-}
-
-void rotZ(float4 *z, float s, float c) {
-	z.x = c*z.x + s*z.y;
-	z.y = c*z.y - s*z.x;
-}
-
-void rotX(float4 *z, float a) {
-	rotX(z, sin(a), cos(a));
-}
-void rotY(float4 *z, float a) {
-	rotY(z, sin(a), cos(a));
-}
-void rotZ(float4 *z, float a) {
-	rotZ(z, sin(a), cos(a));
-}
-
-/*
-float de_fractal(float4 p) {
-	float w = 1;
-	for (int i = 0; i < iFracIter; ++i)
-	{
-		p = fabs(p);
-		rotZ(p, iFracAng1);
-		mengerFold(p);
-		rotX(p, iFracAng2);
-		p *= iFracScale;
-		w *= iFracScale;
-		p += iFracShift;
-	}
-	return de_box(p, (float4)(6.0)) / w;
-}
 
 float4 col_fractal(float4 p)
 {
@@ -154,8 +80,62 @@ float4 render_point(vec2 pos, vec2 mres, vec2 cres, float4 data)
 	return march_data;
 }*/
 
-float de_sphere(float4 p, float r) {
-	return length(p) - r;
+float sdPlane(float4 p, float4 n)
+{
+	// n must be normalized
+	return dot((float4)(p.x, p.y, p.z, 1.f), n);
+}
+
+void planeFold(float4 *z, float4 n, float d) {
+	*z -= 2.0f * min((float4)(0.0f, 0.0f, 0.0f, 0.0f), dot(*z, n) - d) * n;
+}
+
+void sierpinskiFold(float4 *z) {
+	float a = min(z->x + z->y, 0.0f);
+	z->x -= a; z->y -= a;
+	a = min(z->x + z->z, 0.0f);
+	z->x -= a; z->z -= a;
+	a = min(z->y + z->z, 0.0f);
+	z->y -= a; z->z -= a;
+}
+
+void mengerFold(float4 *z) {
+	float a = min(z->x - z->y, 0.f);
+	z->x -= a; z->y += a;
+	a = min(z->x - z->z, 0.f);
+	z->x -= a; z->z += a;
+	a = min(z->y - z->z, 0.f);
+	z->y -= a; z->z += a;
+}
+
+void boxFold(float4 *z, float4 r) {
+	*z = clamp(*z, -r, r) * 2.f - *z;
+}
+
+void rotXa(float4 *z, float s, float c) {
+	z->y = c*z->y + s*z->z;
+	z->z = c*z->z - s*z->y;
+}
+
+void rotYa(float4 *z, float s, float c) {
+	//???
+	z->x = c*z->x - s*z->z;
+	z->z = c*z->z + s*z->x;
+}
+
+void rotZa(float4 *z, float s, float c) {
+	z->x = c*z->x + s*z->y;
+	z->y = c*z->y - s*z->x;
+}
+
+void rotX(float4 *z, float a) {
+	rotXa(z, sin(a), cos(a));
+}
+void rotY(float4 *z, float a) {
+	rotYa(z, sin(a), cos(a));
+}
+void rotZ(float4 *z, float a) {
+	rotZa(z, sin(a), cos(a));
 }
 
 float de_box(float4 p, float4 s) {
@@ -163,12 +143,35 @@ float de_box(float4 p, float4 s) {
 	return (min(max(max(a.x, a.y), a.z), 0.0f) + length(max(a, 0.0f)));
 }
 
+
+float de_sphere(float4 p, float r) {
+	return length(p) - r;
+}
+
+
+float de_fractal(float4 p) {
+	float w = 1;
+	for (int i = 0; i < iFracIter; ++i)
+	{
+		p = fabs(p);
+		rotZ(&p, iFracAng1);
+		mengerFold(&p);
+		rotX(&p, iFracAng2);
+		p *= iFracScale;
+		w *= iFracScale;
+		p += iFracShift;
+	}
+	return de_box(p, (float4)(6.0f, 6.0f, 6.0f, 0.f)) / w;
+}
+
+
+
 float SDF(float4 p)
 {
 	p = p - (float4)(4.f, -3.5, 1.f,0.f);
 	//rotX(p, 3.14159f*0.08f);
 	//rotY(p, 3.14159f*0.2f);
-	float DE = de_box(p, (float4)(3.f,2.f,2.5f,0.f));
+	float DE = de_fractal(p);
 	return DE;
 }
 
@@ -191,16 +194,19 @@ void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float c
 		if (h < 0)
 		{
 			subsurf_td -= h;
+			march_data->z += 2*h/cone_radius;
 		}
 
 		if (h<max(cone_radius, (1 - NdotR)*td*cone_angle_max))
 		{
+			march_data->z += 2*h / cone_radius;
 			break;
 		}
 
 		if (td < limits.x)
 		{
 			march_data->y = 1;
+			march_data->z += 2*NdotR;
 		}
 		else
 		{
@@ -215,7 +221,7 @@ void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float c
 	march_data->x = td + h;
 	march_data->y = h;
 	//p = p + march_data.x*ray;
-	march_data->z += sin(h / cone_radius);
+	
 }
 
 ///MAIN FUNCTIONS
@@ -235,9 +241,9 @@ __kernel void first_pass_render(__read_write image2d_t render, __read_write imag
 	float4 position = cam_pos + camera2.x*pos.x*dirz + camera2.x*pos.y*diry;
 	float4 march_data = (float4)(0.f, 0.f, 0.f, 0.f);
 	float4 limits = (float4)(20.f, 0.f, 256.f, 0.f);
-	float cone_angle = 2 * FOV / step_resolution.x;
+	float cone_angle = 4 * FOV / step_resolution.x;
 	cone_march(ray, position, &march_data, limits, cone_angle, cone_angle);
-
+	march_data.z = march_data.z*march_data.z*0.01f;
 	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(march_data.z*0.005f, 1-march_data.z*0.02f, march_data.z*0.02f,1.f));
 }
 
