@@ -225,26 +225,45 @@ void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float c
 }
 
 ///MAIN FUNCTIONS
+const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE
+| CLK_ADDRESS_CLAMP_TO_EDGE
+| CLK_FILTER_NEAREST;
 
 //find distance to surface(+ h and num of iterations) for each pixel
-__kernel void first_pass_render(__read_write image2d_t render, __read_write image2d_t prev_render, 
+__kernel void first_pass_render(__read_only image2d_t prev_render, __write_only image2d_t render,
 	float4 cam_pos, float4 dirx, float4 diry, float4 dirz, float4 resolution, float4 camera, float4 camera2, int step)
 {
 	//pixel coordinate [0..W/H]
 	int2 pixel = (int2)(get_global_id(0), get_global_id(1));
 	//float pixel coordinate [0..1]
-	float2 step_resolution = resolution.xy/pow(resolution.w,step);
-	float2 UV = (float2)(pixel.x,pixel.y)/step_resolution;
-	float2 pos = 2.f*UV-1.f;
+
+	//camera stuff
+	float2 step_resolution = resolution.xy / pow(resolution.w, resolution.z - step - 1);
+	float2 UV = (float2)(pixel.x, pixel.y) / step_resolution;
+	float2 pos = 2.f*UV - 1.f;
 	float FOV = camera.x*DEG;
 	float4 ray = normalize(dirx + FOV*pos.x*dirz + FOV*pos.y*diry);
 	float4 position = cam_pos + camera2.x*pos.x*dirz + camera2.x*pos.y*diry;
-	float4 march_data = (float4)(0.f, 0.f, 0.f, 0.f);
 	float4 limits = (float4)(20.f, 0.f, 256.f, 0.f);
 	float cone_angle = 4 * FOV / step_resolution.x;
+	float4 march_data = (float4)(0.f, 0.f, 0.f, 1.f);
+
+	//load data from previous render pass
+	if (step != 0)
+	{
+		march_data = read_imagef(prev_render, sampler, UV);
+	}
+
 	cone_march(ray, position, &march_data, limits, cone_angle, cone_angle);
-	march_data.z = march_data.z*march_data.z*0.01f;
-	write_imagef(render, (int2)(get_global_id(0), get_global_id(1)), (float4)(march_data.z*0.005f, 1-march_data.z*0.02f, march_data.z*0.02f,1.f));
+
+	if (step == resolution.z - 1)
+	{
+		march_data.x = march_data.x / 10.f;
+		march_data.y = march_data.y / 100.f;
+		march_data.z = march_data.z / 100.f;
+	}
+
+	write_imagef(render, pixel, march_data);
 }
 
 //calculate shadow rays, reflection rays and refraction rays

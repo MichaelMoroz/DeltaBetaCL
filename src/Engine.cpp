@@ -6,7 +6,7 @@ Engine::Engine(sf::Texture *texture): time(0.f)
 	//LoadFromConfig(config);
 	prev_mouse = sf::Vector2f(0.f, 0.f);
 	CL = new OpenCL(kernel_cl);
-	depth = new CLRender(kernel_depth, texture->getNativeHandle(), 1, texture->getSize().x, texture->getSize().y, 1, 1, CL);
+	depth = new CLRender(kernel_depth, texture->getNativeHandle(), 1, texture->getSize().x, texture->getSize().y, 2, 4, CL);
 	depth->UseWorldModel(&world);
 }
 
@@ -35,7 +35,6 @@ void Engine::Update(sf::RenderWindow *window)
 	{
 		if (event.type == sf::Event::Closed) {
 			window->close();
-			break;
 		}
 		if (event.type == sf::Event::MouseButtonReleased)
 		{
@@ -102,6 +101,10 @@ bool Engine::Render()
 	depth->Run();
 	CL->queue.finish();
 	return true;
+}
+
+Engine::~Engine()
+{
 }
 
 void Engine::LoadFromConfig(string file)

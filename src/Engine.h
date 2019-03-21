@@ -29,6 +29,7 @@ public:
 	void SetRenderingTexture(sf::Texture texture);
 	void Update(sf::RenderWindow *window);
 	bool Render();
+	~Engine();
 
 protected:
 	void LoadFromConfig(string file);
