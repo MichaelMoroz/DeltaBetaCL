@@ -17,6 +17,10 @@ float sfrand( int *seed )
 #define iFracScale 1.8f
 #define iFracAng1 -0.12f
 #define iFracAng2 0.5f
+#define sin1 -0.1197f
+#define cos1 0.9928f
+#define sin2 0.4794f
+#define cos2 0.8775f
 #define iFracShift (float4)(-2.12f, -2.75f, 0.49f,0.f)
 #define iFracIter 16
 /*
@@ -113,19 +117,21 @@ void boxFold(float4 *z, float4 r) {
 }
 
 void rotXa(float4 *z, float s, float c) {
-	z->y = c*z->y + s*z->z;
-	z->z = c*z->z - s*z->y;
+	float2 rot = (float2)(c*z->y + s*z->z, c*z->z - s*z->y);
+	z->y = rot.x;
+	z->z = rot.y;
 }
 
 void rotYa(float4 *z, float s, float c) {
-	//???
-	z->x = c*z->x - s*z->z;
-	z->z = c*z->z + s*z->x;
+	float2 rot = (float2)(c*z->x - s*z->z, c*z->z + s*z->x);
+	z->x = rot.x;
+	z->z = rot.y;
 }
 
 void rotZa(float4 *z, float s, float c) {
-	z->x = c*z->x + s*z->y;
-	z->y = c*z->y - s*z->x;
+	float2 rot = (float2)(c*z->x + s*z->y, c*z->y - s*z->x);
+	z->x = rot.x;
+	z->y = rot.y;
 }
 
 void rotX(float4 *z, float a) {
@@ -148,15 +154,16 @@ float de_sphere(float4 p, float r) {
 	return length(p) - r;
 }
 
-
 float de_fractal(float4 p) {
 	float w = 1;
 	for (int i = 0; i < iFracIter; ++i)
 	{
 		p = fabs(p);
-		rotZ(&p, iFracAng1);
+		rotZa(&p, sin1, cos1);
+		//rotZ(&p, iFracAng1);
 		mengerFold(&p);
-		rotX(&p, iFracAng2);
+		//rotX(&p, iFracAng2);
+		rotXa(&p, sin2, cos2);
 		p *= iFracScale;
 		w *= iFracScale;
 		p += iFracShift;
@@ -227,7 +234,7 @@ void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float c
 ///MAIN FUNCTIONS
 const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE
 | CLK_ADDRESS_CLAMP_TO_EDGE
-| CLK_FILTER_NEAREST;
+| CLK_FILTER_LINEAR;
 
 //find distance to surface(+ h and num of iterations) for each pixel
 __kernel void first_pass_render(__read_only image2d_t prev_render, __write_only image2d_t render,
@@ -235,14 +242,14 @@ __kernel void first_pass_render(__read_only image2d_t prev_render, __write_only 
 {
 	//pixel coordinate [0..W/H]
 	int2 pixel = (int2)(get_global_id(0), get_global_id(1));
-	//float pixel coordinate [0..1]
-
-	//camera stuff
+	///camera stuff
 	float2 step_resolution = resolution.xy / pow(resolution.w, resolution.z - step - 1);
+	//float pixel coordinate [0..1]
+	float whratio = resolution.x / resolution.y;
 	float2 UV = (float2)(pixel.x, pixel.y) / step_resolution;
 	float2 pos = 2.f*UV - 1.f;
 	float FOV = camera.x*DEG;
-	float4 ray = normalize(dirx + FOV*pos.x*dirz + FOV*pos.y*diry);
+	float4 ray = normalize(dirx + FOV*pos.x*dirz*whratio + FOV*pos.y*diry);
 	float4 position = cam_pos + camera2.x*pos.x*dirz + camera2.x*pos.y*diry;
 	float4 limits = (float4)(20.f, 0.f, 256.f, 0.f);
 	float cone_angle = 4 * FOV / step_resolution.x;

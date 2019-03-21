@@ -23,6 +23,7 @@ private:
 	World *world;
 	CLFunction render;
 	Image2D **clImage;
+	Image2D void_image;
 	int W, H, L, S, textures;
 	OpenCL *cl;
 	GLuint texture;

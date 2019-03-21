@@ -29,10 +29,11 @@ CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int heigh
 	for (int i = 0; i < lvl; i++)
 	{
 		clImage[i] = new Image2D[textures];
+		int w = width*pow(1.f / S, lvl - i - 1);
+		int h = height*pow(1.f / S, lvl - i - 1);
 		for (int j = 0; j < textures; j++)
 		{
-			int w = width*pow(1.f/S, lvl - i - 1);
-			int h = height*pow(1.f / S, lvl - i - 1);
+			
 			if (j == 0 && i == lvl - 1)
 			{
 				//Create Interoperation texture
@@ -48,8 +49,21 @@ CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int heigh
 					CL_MEM_READ_WRITE, &format, w, h, 0, NULL, &err);
 				clImage[i][j] = cl::Image2D(img);
 			}
+			
+		}
+
+		if (i == 0)
+		{
+			//void image for initial step
+			cl_int err = 0;
+			static const cl_image_format format = { CL_RGBA, CL_FLOAT };
+			cl_mem img = clCreateImage2D(cl->default_context(),
+				CL_MEM_READ_WRITE, &format, w, h, 0, NULL, &err);
+
+			void_image = cl::Image2D(img);
 		}
 	}
+
 
 	render.Initialize(name, cl, 1, 1, width, height);
 }
@@ -94,7 +108,7 @@ bool CLRender::Run()
 			{
 				if (i == 0) // if initial step
 				{
-					render.SetArg(j, clImage[i][j]);
+					render.SetArg(j, void_image);
 				}
 				else
 				{

@@ -6,7 +6,7 @@ Engine::Engine(sf::Texture *texture): time(0.f)
 	//LoadFromConfig(config);
 	prev_mouse = sf::Vector2f(0.f, 0.f);
 	CL = new OpenCL(kernel_cl);
-	depth = new CLRender(kernel_depth, texture->getNativeHandle(), 1, texture->getSize().x, texture->getSize().y, 2, 4, CL);
+	depth = new CLRender(kernel_depth, texture->getNativeHandle(), 1, texture->getSize().x, texture->getSize().y, 4, 2, CL);
 	depth->UseWorldModel(&world);
 }
 
