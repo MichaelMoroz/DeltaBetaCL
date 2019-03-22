@@ -27,7 +27,7 @@
 
 using namespace std;
 
-const sf::VideoMode window_size(1440, 1024, 24);
+const sf::VideoMode window_size(2560, 1440, 24);
 
 
 #if defined(_WIN32)
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	sf::Image img;
-	img.create(1440, 1024, sf::Color::White);
+	img.create(2560, 1440, sf::Color::White);
 	sf::Texture test_render;
 	test_render.loadFromImage(img);
 	sf::Sprite spr;
