@@ -182,6 +182,15 @@ float SDF(float4 p)
 	return DE;
 }
 
+//A faster formula to find the gradient/normal direction of the DE(the w component is the average DE)
+//credit to http://www.iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
+float4 calcNormal(float4 p, float dx) {
+	const float4 k = (float4)(1.f, -1.f, 0.f, 0.f);
+	return (k.xyyx*SDF(p + k.xyyz*dx) +
+		    k.yyxx*SDF(p + k.yyxz*dx) +
+		    k.yxyx*SDF(p + k.yxyz*dx) +
+		    k.xxxx*SDF(p + k.xxxz*dx))/(float4)(4.f*dx, 4.f*dx, 4.f*dx, 4.f);
+}
 
 void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float cone_angle, float cone_angle_max)
 {
@@ -254,7 +263,13 @@ __kernel void first_pass_render(__read_only image2d_t prev_render, __write_only 
 		float4 ray = normalize(dirx + FOV*pos.x*dirz*whratio + FOV*pos.y*diry);
 		float4 position = cam_pos + camera2.x*pos.x*dirz + camera2.x*pos.y*diry;
 		float4 limits = (float4)(20.f, 0.f, 256.f, 0.f);
-		float cone_angle = 4 * FOV / step_resolution.x;
+		float cone_angle = 8 * FOV / step_resolution.x;
+		if (step == resolution.z - 1)
+		{
+			cone_angle = 4 * FOV / step_resolution.x;
+		}
+		
+		float cone_anglem = 4 * FOV / resolution.x;
 		float4 march_data = (float4)(0.f, 0.f, 0.f, 1.f);
 
 		//load data from previous render pass
@@ -264,14 +279,15 @@ __kernel void first_pass_render(__read_only image2d_t prev_render, __write_only 
 		}
 
 		cone_march(ray, position, &march_data, limits, cone_angle, cone_angle);
-
+		
 		if (step == resolution.z - 1)
 		{
-			march_data.x = march_data.z / 50.f;
-			march_data.y = march_data.z / 50.f;
-			march_data.z = march_data.z / 50.f;
+			float4 normal = calcNormal(position + march_data.x*ray, cone_angle*march_data.x);
+			march_data.x = 0.5f*normal.x + 0.5f;
+			march_data.y = 0.5f*normal.y + 0.5f;
+			march_data.z = 0.5f*normal.z + 0.5f;
 		}
-
+		
 		write_imagef(render, pixel, march_data);
 	}
 }
