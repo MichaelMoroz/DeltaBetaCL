@@ -213,7 +213,7 @@ void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float c
 			march_data->z += 2*h/cone_radius;
 		}
 
-		if (h<max(cone_radius, (1 - NdotR)*td*cone_angle_max))
+		if (fabs(h-cone_radius)<cone_radius)
 		{
 			march_data->z += 2*h / cone_radius;
 			break;
@@ -229,8 +229,8 @@ void cone_march(float4 ray, float4 p, float4 *march_data, float4 limits, float c
 			break;
 		}
 
-		h = ((h>0) ? (1) : (-3))*max(fabs(h), cone_radius);
-		td += fabs(h);
+		h = ((h>0) ? (h) : (-cone_radius));
+		td += h;
 		prev_h = h;
 	}
 	//whiout +h we are losing 1 SDF calcualtion each ray, aka slight optimization
@@ -253,17 +253,17 @@ __kernel void first_pass_render(__read_only image2d_t prev_render, __write_only 
 	int2 pixel = (int2)(get_global_id(0), get_global_id(1));
 	///camera stuff
 	float2 step_resolution = resolution.xy / pow(resolution.w, resolution.z - step - 1);
-	if (pixel.x < step_resolution.x && pixel.y < step_resolution.y)
+	if (pixel.x < step_resolution.x && pixel.y < step_resolution.y) // if thread/pixel is inside the image
 	{
-		//float pixel coordinate [0..1]
 		float whratio = resolution.x / resolution.y;
+		//float pixel coordinate [0..1]
 		float2 UV = (float2)(pixel.x, pixel.y) / step_resolution;
 		float2 pos = 2.f*UV - 1.f;
 		float FOV = camera.x*DEG;
 		float4 ray = normalize(dirx + FOV*pos.x*dirz*whratio + FOV*pos.y*diry);
 		float4 position = cam_pos + camera2.x*pos.x*dirz + camera2.x*pos.y*diry;
-		float4 limits = (float4)(20.f, 0.f, 256.f, 0.f);
-		float cone_angle = 8 * FOV / step_resolution.x;
+		const float4 limits = (float4)(20.f, 0.f, 256.f, 0.f);
+		float cone_angle = 6 * FOV / step_resolution.x;
 		if (step == resolution.z - 1)
 		{
 			cone_angle = 4 * FOV / step_resolution.x;
@@ -272,17 +272,19 @@ __kernel void first_pass_render(__read_only image2d_t prev_render, __write_only 
 		float cone_anglem = 4 * FOV / resolution.x;
 		float4 march_data = (float4)(0.f, 0.f, 0.f, 1.f);
 
-		//load data from previous render pass
-		if (step != 0)
+		//load interpolated data from previous low res render pass
+		if (step != 0)//if not the first step
 		{
 			march_data = read_imagef(prev_render, sampler, UV);
 		}
 
 		cone_march(ray, position, &march_data, limits, cone_angle, cone_angle);
 		
-		if (step == resolution.z - 1)
+		if (step == resolution.z - 1)//if last step
 		{
-			float4 normal = calcNormal(position + march_data.x*ray, cone_angle*march_data.x);
+			float4 normal = calcNormal(position + (march_data.x-4*march_data.y)*ray, cone_angle*march_data.x);
+			normal.w = 0;
+			normal = normalize(normal);
 			march_data.x = 0.5f*normal.x + 0.5f;
 			march_data.y = 0.5f*normal.y + 0.5f;
 			march_data.z = 0.5f*normal.z + 0.5f;

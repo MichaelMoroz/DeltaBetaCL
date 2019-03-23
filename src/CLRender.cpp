@@ -22,8 +22,8 @@ CLRender::CLRender(string name, int textures, int width, int height, int lvl, in
 	render.Initialize(name, cl, 1, 1, width, height);
 }
 
-CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int height, int lvl, int scale, OpenCL *a) :
-	cl(a), W(width), H(height), S(scale), L(lvl), textures(txtr), world(NULL), texture(textureID)
+CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int height, int lvl, int scale, OpenCL *a, bool d) :
+	cl(a), W(width), H(height), S(scale), L(lvl), textures(txtr), world(NULL), texture(textureID), debug(d)
 {
 	clImage = new Image2D*[lvl];
 	for (int i = 0; i < lvl; i++)
@@ -40,6 +40,7 @@ CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int heigh
 				int lError = 0;
 				cl_mem texture_cl = clCreateFromGLTexture(cl->default_context(), CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, textureID, &lError);
 				clImage[i][j] = cl::Image2D(texture_cl);
+				DebugOut("Interoperation texture error: " + num2str(lError));
 			}
 			else
 			{
@@ -48,6 +49,7 @@ CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int heigh
 				cl_mem img = clCreateImage2D(cl->default_context(),
 					CL_MEM_READ_WRITE, &format, w, h, 0, NULL, &err);
 				clImage[i][j] = cl::Image2D(img);
+				DebugOut("OpenCL texture error: " + num2str((int)err));
 			}
 			
 		}
@@ -59,7 +61,7 @@ CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int heigh
 			static const cl_image_format format = { CL_RGBA, CL_FLOAT };
 			cl_mem img = clCreateImage2D(cl->default_context(),
 				CL_MEM_READ_WRITE, &format, w, h, 0, NULL, &err);
-
+			DebugOut("Void texture error: " + num2str((int)err));
 			void_image = cl::Image2D(img);
 		}
 	}
@@ -78,7 +80,10 @@ bool CLRender::Run()
 	else
 	{
 		if (texture != NULL)
-			clEnqueueAcquireGLObjects(cl->queue(), 1, &clImage[L-1][0](), 0, 0, 0);
+		{
+			int err = clEnqueueAcquireGLObjects(cl->queue(), 1, &clImage[L - 1][0](), 0, 0, 0);
+			DebugOut("Acquire GL Objects error:" + num2str(err));
+		}
 		//set camera parameters
 		vec4 data = vec4(world->GetCamera()->GetPosition(), 0);
 		render.SetArg(2 * textures, 4, glm::value_ptr(data));
@@ -123,11 +128,16 @@ bool CLRender::Run()
 			}
 		
 			render.SetArg(2 * textures + 7, i);
-			render.RFlush();
+			int err = render.RFlush();
+			DebugOut("Kernel execution error:" + num2str(err) + ", lvl = " + num2str(i));
 		}
 
 		if (texture != NULL)
-			clEnqueueReleaseGLObjects(cl->queue(), 1, &clImage[L - 1][0](), 0, 0, 0);
+		{
+			int err = clEnqueueReleaseGLObjects(cl->queue(), 1, &clImage[L - 1][0](), 0, 0, 0);
+			DebugOut("Release GL Objects error:" + num2str(err));
+		}
+			
 		return true;
 	}
 }
@@ -140,5 +150,15 @@ void CLRender::SetInputTextures(Image2D * textures, int N)
 void CLRender::UseWorldModel(World * w)
 {
 	world = w;
+}
+
+void CLRender::DebugOut(string text)
+{
+	if (debug)
+	{
+		ofstream file(log_file, ofstream::app);
+		file << text << endl;
+		file.close();
+	}
 }
 

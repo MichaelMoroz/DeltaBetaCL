@@ -42,29 +42,26 @@ int main(int argc, char *argv[]) {
 	settings.majorVersion = 2;
 	settings.minorVersion = 0;
 	 
-	sf::RenderWindow window(window_size, "Engine Demo", sf::Style::Close, settings);
-	window.setFramerateLimit(60);
+	sf::RenderWindow window(window_size, "Engine Demo", sf::Style::Fullscreen, settings);
+	//window.setFramerateLimit(60);
 	window.setVerticalSyncEnabled(true);
 	if (glewInit())
 	{
-		ErrMsg("failed to init GLEW");
+		ErrMsg("Failed to init GLEW");
 	}
 
-	sf::Image img;
-	img.create(2560, 1440, sf::Color::White);
 	sf::Texture test_render;
-	test_render.loadFromImage(img);
-	sf::Sprite spr;
-	spr.setTexture(test_render);
-
 	Engine engine(&test_render);
 	window.setActive(true);
 
+	sf::Sprite spr;
+	spr.setTexture(test_render);
+	spr.setScale((float)window.getSize().x / engine.GetRenderSize().x, (float)window.getSize().y / engine.GetRenderSize().y);
 	while (window.isOpen())
 	{
 		window.clear(sf::Color::Black);
-		engine.Update(&window);
 		engine.Render();
+		engine.Update(window);
 		window.draw(spr);
 		window.display();
 	}

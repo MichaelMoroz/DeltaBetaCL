@@ -4,7 +4,7 @@
 #include<World.h>
 #include<CLRender.h>
 
-static const string config = "config.txt";
+static const string config = "engine.cfg";
 static const string vert_glsl = "shaders/vertex_shader.glsl";
 static const string frag_glsl = "shaders/fragment_shader.glsl";
 static const string kernel_cl = "OpenCL/kernel.c";
@@ -15,6 +15,11 @@ static const string kernel_post = "";
 class Engine
 {
 private:
+	int width, height;
+	int MRRMlvl, MRRMsc;
+	float mouse_sensitivity, camera_speed;
+	bool debug;
+
 	bool all_keys[sf::Keyboard::KeyCount];
 	OpenCL *CL;
 	World world;
@@ -25,9 +30,9 @@ private:
 
 public:
 	Engine(sf::Texture *texture);
-
+	vec2 GetRenderSize();
 	void SetRenderingTexture(sf::Texture texture);
-	void Update(sf::RenderWindow *window);
+	void Update(sf::RenderWindow &window);
 	bool Render();
 	~Engine();
 
