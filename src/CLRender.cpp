@@ -38,9 +38,9 @@ CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int heigh
 			{
 				//Create Interoperation texture
 				int lError = 0;
-				cl_mem texture_cl = clCreateFromGLTexture(cl->default_context(), CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, textureID, &lError);
-				clImage[i][j] = cl::Image2D(texture_cl);
+				cl_mem texture_cl = clCreateFromGLTexture2D(cl->default_context(), CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, textureID, &lError);
 				DebugOut("Interoperation texture error: " + num2str(lError));
+				clImage[i][j] = cl::Image2D(texture_cl);
 			}
 			else
 			{
