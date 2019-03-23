@@ -10,8 +10,8 @@ CLRender::CLRender(string name, int textures, int width, int height, int lvl, in
 		clImage[i] = new Image2D[textures];
 		for (int j = 0; j < textures; j++)
 		{
-			int w = floor(width*pow(1.f / S, lvl - i - 1));
-			int h = floor(height*pow(1.f / S, lvl - i - 1));
+			int w = glm::max(128.f, floor(width*pow(1.f / S, lvl - i - 1)));
+			int h = glm::max(128.f, floor(height*pow(1.f / S, lvl - i - 1)));
 
 			clImage[i][j] = cl::Image2D(cl->default_context, CL_MEM_READ_WRITE,
 				cl::ImageFormat(CL_RGBA, CL_FLOAT),
@@ -29,8 +29,8 @@ CLRender::CLRender(string name, GLuint textureID, int txtr, int width, int heigh
 	for (int i = 0; i < lvl; i++)
 	{
 		clImage[i] = new Image2D[textures];
-		int w = floor(width*pow(1.f / S, lvl - i - 1));
-		int h = floor(height*pow(1.f / S, lvl - i - 1));
+		int w = glm::max(128.f, floor(width*pow(1.f / S, lvl - i - 1)));
+		int h = glm::max(128.f, floor(height*pow(1.f / S, lvl - i - 1)));
 		for (int j = 0; j < textures; j++)
 		{
 			
@@ -103,8 +103,9 @@ bool CLRender::Run()
 		//render through all resolutions
 		for (int i = 0; i < L; i++)
 		{
-			int w = floor(W*pow(1.f / S, L - i - 1));
-			int h = floor(H*pow(1.f / S, L - i - 1));
+			//minimal size 128
+			int w = glm::max(128.f, floor(W*pow(1.f / S, L - i - 1)));
+			int h = glm::max(128.f, floor(H*pow(1.f / S, L - i - 1)));
 			//use maximal possible group size
 			render.SetRange(floor(sqrt(cl->group_size[0])), floor(sqrt(cl->group_size[0])), w, h);
 
@@ -131,7 +132,7 @@ bool CLRender::Run()
 			int err = render.RFlush();
 			DebugOut("Kernel execution error:" + num2str(err) + ", lvl = " + num2str(i));
 		}
-
+		
 		if (texture != NULL)
 		{
 			int err = clEnqueueReleaseGLObjects(cl->queue(), 1, &clImage[L - 1][0](), 0, 0, 0);

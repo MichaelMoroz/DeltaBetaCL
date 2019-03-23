@@ -252,7 +252,7 @@ __kernel void first_pass_render(__read_only image2d_t prev_render, __write_only 
 	//pixel coordinate [0..W/H]
 	int2 pixel = (int2)(get_global_id(0), get_global_id(1));
 	///camera stuff
-	float2 step_resolution = resolution.xy / pow(resolution.w, resolution.z - step - 1);
+	float2 step_resolution = max(resolution.xy / pow(resolution.w, resolution.z - step - 1), (float2)(128.f,128.f));
 	if (pixel.x < step_resolution.x && pixel.y < step_resolution.y) // if thread/pixel is inside the image
 	{
 		float whratio = resolution.x / resolution.y;
