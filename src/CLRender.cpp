@@ -8,15 +8,28 @@ CLRender::CLRender(string name, int textures, int width, int height, int lvl, in
 	for (int i = 0; i < lvl; i++)
 	{
 		clImage[i] = new Image2D[textures];
+		int w = glm::max(128.f, floor(width*pow(1.f / S, lvl - i - 1)));
+		int h = glm::max(128.f, floor(height*pow(1.f / S, lvl - i - 1)));
+
 		for (int j = 0; j < textures; j++)
 		{
-			int w = glm::max(128.f, floor(width*pow(1.f / S, lvl - i - 1)));
-			int h = glm::max(128.f, floor(height*pow(1.f / S, lvl - i - 1)));
+			cl_int err = 0;
+			static const cl_image_format format = { CL_RGBA, CL_FLOAT };
+			cl_mem img = clCreateImage2D(cl->default_context(),
+				CL_MEM_READ_WRITE, &format, w, h, 0, NULL, &err);
+			clImage[i][j] = cl::Image2D(img);
+			DebugOut("OpenCL texture error: " + num2str((int)err));
+		}
 
-			clImage[i][j] = cl::Image2D(cl->default_context, CL_MEM_READ_WRITE,
-				cl::ImageFormat(CL_RGBA, CL_FLOAT),
-				w, h, 0, NULL);
-
+		if (i == 0)
+		{
+			//void image for initial step
+			cl_int err = 0;
+			static const cl_image_format format = { CL_RGBA, CL_FLOAT };
+			cl_mem img = clCreateImage2D(cl->default_context(),
+				CL_MEM_READ_WRITE, &format, w, h, 0, NULL, &err);
+			DebugOut("Void texture error: " + num2str((int)err));
+			void_image = cl::Image2D(img);
 		}
 	}
 	render.Initialize(name, cl, 1, 1, width, height);

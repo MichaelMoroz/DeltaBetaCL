@@ -22,3 +22,5 @@ add_library(DeltaBetaCLSources
   BVH.h
   BVH.cpp
 )
+
+add_compile_definitions(SFML_STATIC)

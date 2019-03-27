@@ -1,8 +1,16 @@
-#include<SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 #include<Utilities.h>
 #include<Camera.h>
 #include<World.h>
 #include<CLRender.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#define ErrMsg(x) MessageBox(nullptr, TEXT(x), TEXT("ERROR"), MB_OK);
+#else
+#define ErrMsg(x) std::cerr << x << std::endl;
+#endif
 
 static const string config = "engine.cfg";
 static const string vert_glsl = "shaders/vertex_shader.glsl";
@@ -15,6 +23,7 @@ static const string kernel_post = "";
 class Engine
 {
 private:
+	sf::RenderWindow *window;
 	int width, height;
 	int MRRMlvl, MRRMsc;
 	float mouse_sensitivity, camera_speed;
@@ -27,12 +36,15 @@ private:
 	float time, fps, smoothfps;
 	sf::Vector2f prev_mouse;
 	sf::Clock timer;
+	sf::Texture texture;
+	sf::Sprite spr;
 
 public:
-	Engine(sf::Texture *texture);
+	Engine(int W, int H);
 	vec2 GetRenderSize();
 	void SetRenderingTexture(sf::Texture texture);
-	void Update(sf::RenderWindow &window);
+	void Update();
+	bool Running();
 	bool Render();
 	~Engine();
 

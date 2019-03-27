@@ -1,16 +1,40 @@
 #include "Engine.h"
 
-Engine::Engine(sf::Texture *texture): time(0.f), mouse_sensitivity(0.0004f), camera_speed(0.075f)
+Engine::Engine(int Width, int Height): time(0.f), mouse_sensitivity(0.0004f), camera_speed(0.075f)
 {
+	sf::ContextSettings settings;
+	settings.majorVersion = 2;
+	settings.minorVersion = 0;
+	sf::VideoMode window_size(Width, Height, 24);
+	window = new sf::RenderWindow(window_size, "Engine Demo", sf::Style::Fullscreen, settings);
+	//window.setFramerateLimit(60);
+	window->setVerticalSyncEnabled(true);
+	if (glewInit())
+	{
+		ErrMsg("Failed to init GLEW");
+	}
+	window->setActive(true);
+
 	memset(all_keys, false, sf::Keyboard::KeyCount);
 	LoadFromConfig(config);
 	sf::Image img;
 	img.create(width, height, sf::Color::Red);
-	texture->loadFromImage(img);
+	texture.loadFromImage(img);
+
+	spr.setTexture(texture);
+	spr.setScale((float)window->getSize().x / GetRenderSize().x, (float)window->getSize().y / GetRenderSize().y);
+	
+
 	prev_mouse = sf::Vector2f(0.f, 0.f);
 	CL = new OpenCL(kernel_cl);
-	depth = new CLRender(kernel_depth, texture->getNativeHandle(), 1, 
-		texture->getSize().x, texture->getSize().y, MRRMlvl, MRRMsc, CL, debug);
+
+	if (CL->failed)
+	{
+		window->close();
+	}
+
+	depth = new CLRender(kernel_depth, texture.getNativeHandle(), 1, 
+		texture.getSize().x, texture.getSize().y, MRRMlvl, MRRMsc, CL, debug);
 	depth->UseWorldModel(&world);
 }
 
@@ -23,7 +47,7 @@ void Engine::SetRenderingTexture(sf::Texture texture)
 {
 }
 
-void Engine::Update(sf::RenderWindow &window)
+void Engine::Update()
 {
 	float dt = timer.getElapsedTime().asSeconds();
 	fps = 1 / dt;
@@ -38,10 +62,10 @@ void Engine::Update(sf::RenderWindow &window)
 	time += dt;
 
 	sf::Event event;
-	while (window.pollEvent(event))
+	while (window->pollEvent(event))
 	{
 		if (event.type == sf::Event::Closed) {
-			window.close();
+			window->close();
 		}
 		if (event.type == sf::Event::MouseButtonReleased)
 		{
@@ -64,7 +88,7 @@ void Engine::Update(sf::RenderWindow &window)
 			if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
 
 			if (keycode == sf::Keyboard::Escape) {
-				window.close();
+				window->close();
 			}
 		
 			all_keys[keycode] = true;
@@ -104,13 +128,21 @@ void Engine::Update(sf::RenderWindow &window)
 	world.GetCamera()->Move(dx);
 	world.GetCamera()->Update(dt*0.6);
 	timer.restart();
-	if (debug) window.close();
+	if (debug) window->close();
+}
+
+bool Engine::Running()
+{
+	return window->isOpen();
 }
 
 bool Engine::Render()
 {
+	window->clear(sf::Color::Black);
 	depth->Run();
 	CL->queue.finish();
+	window->draw(spr);
+	window->display();
 	return true;
 }
 

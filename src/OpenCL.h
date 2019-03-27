@@ -13,7 +13,7 @@
 #include <iostream>
 #ifdef _WIN32
 #include <windows.h>
-#define ERROR_MSG(x) MessageBox(nullptr, TEXT(x), TEXT("ERROR"), MB_OK);
+#define ERROR_MSG(x) MessageBox(nullptr, TEXT(x), TEXT("OpenCL Error!"), MB_OK);
 #else
 #define ERROR_MSG(x) std::cerr << x << std::endl;
 #endif
@@ -33,18 +33,22 @@ public:
 	cl::CommandQueue queue;
 	vector<std::size_t> group_size;
 	string device_name, device_extensions;
+	bool failed;
 
 	void operator = (OpenCL A)
 	{
-		default_device = A.default_device;
-		default_context = A.default_context;
-		default_program = A.default_program;
-		default_platform = A.default_platform;
-		queue = A.queue;
+		if (!A.failed)
+		{
+			default_device = A.default_device;
+			default_context = A.default_context;
+			default_program = A.default_program;
+			default_platform = A.default_platform;
+			queue = A.queue;
+		}
 	}
 
 
-	OpenCL(string Kernel_path)
+	OpenCL(string Kernel_path): failed(false)
 	{
 		ifstream sin(Kernel_path);
 
@@ -75,6 +79,7 @@ public:
 		if (all_platforms.size() == 0)
 		{
 			ERROR_MSG("No platforms found. Check OpenCL installation!\n");
+			failed = true;
 		}
 
 		bool found_context = 0;
@@ -87,6 +92,7 @@ public:
 			if (all_devices.size() == 0)
 			{
 				ERROR_MSG("No devices found. Check OpenCL installation!\n");
+				failed = true;
 			}
 
 			// Create the properties for this context.
@@ -120,6 +126,7 @@ public:
 		if (!found_context)
 		{
 			ERROR_MSG("Unable to find a compatible OpenCL device for GL-CL interoperation.");
+			failed = true;
 		}
 
 		// Create a command queue.
@@ -127,11 +134,13 @@ public:
 		dev.push_back(default_device);
 		if (default_program.build(dev) != CL_SUCCESS)
 		{
+			//save error log to file
 			ofstream inter;
 			inter.open("errors.txt", ofstream::ate);
-			ERROR_MSG("Error building kernel! Check errors.txt! ");
-			inter << "Error building kernel: " << endl << default_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
-			system("pause");
+			string error_msg(default_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
+			ERROR_MSG((string("Error building kernel! \n") + error_msg).c_str());
+			inter << "Building kernel errors: " << endl << error_msg << "\n";
+			failed = true;
 		}
 		else
 		{
