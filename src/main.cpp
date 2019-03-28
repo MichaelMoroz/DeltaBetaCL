@@ -1,7 +1,3 @@
-#include <OpenCL.h>
-#include <Camera.h>
-#include <CLFunction.h>
-#include <CLRender.h>
 #include <Engine.h>
 
 #include <iostream>

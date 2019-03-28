@@ -1,3 +1,4 @@
+#include <AntTweakBar.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include<Utilities.h>
@@ -22,12 +23,15 @@ class Engine
 {
 private:
 	sf::RenderWindow *window;
+	int Window_W, Window_H;
 	int width, height;
 	int MRRMlvl, MRRMsc;
 	float mouse_sensitivity, camera_speed;
 	bool debug;
 
 	bool all_keys[sf::Keyboard::KeyCount];
+	bool LMB, MMB, RMB;
+
 	OpenCL *CL;
 	World world;
 	CLRender *depth, *texturing, *post_processing;
@@ -36,6 +40,10 @@ private:
 	sf::Clock timer;
 	sf::Texture texture;
 	sf::Sprite spr;
+
+	bool TWBAR_ENABLED;
+	TwBar *stats, *settings;
+
 
 public:
 	Engine(int W, int H);
@@ -48,7 +56,9 @@ public:
 
 protected:
 	void LoadFromConfig(string file);
-	void Draw();
+	bool TwManageEvent(sf::Event &event);
+	void SetAntTweakBar();
+	void DrawAntTweakBar();
 
 };
 

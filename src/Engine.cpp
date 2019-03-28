@@ -1,6 +1,7 @@
 #include "Engine.h"
 
-Engine::Engine(int Width, int Height): time(0.f), mouse_sensitivity(0.0004f), camera_speed(0.075f)
+Engine::Engine(int Width, int Height) : time(0.f), mouse_sensitivity(0.0004f), camera_speed(0.075f),
+TWBAR_ENABLED(false)
 {
 	sf::ContextSettings settings;
 	settings.majorVersion = 2;
@@ -16,6 +17,8 @@ Engine::Engine(int Width, int Height): time(0.f), mouse_sensitivity(0.0004f), ca
 	window->setActive(true);
 
 	memset(all_keys, false, sf::Keyboard::KeyCount);
+	LMB = false; RMB = false; MMB = false;
+
 	LoadFromConfig(config);
 	sf::Image img;
 	img.create(width, height, sf::Color::Red);
@@ -32,6 +35,9 @@ Engine::Engine(int Width, int Height): time(0.f), mouse_sensitivity(0.0004f), ca
 	{
 		window->close();
 	}
+	Window_W = window->getSize().x;
+	Window_H = window->getSize().y;
+	SetAntTweakBar();
 
 	depth = new CLRender(kernel_depth, texture.getNativeHandle(), 1, 
 		texture.getSize().x, texture.getSize().y, MRRMlvl, MRRMsc, CL, debug);
@@ -64,6 +70,7 @@ void Engine::Update()
 	sf::Event event;
 	while (window->pollEvent(event))
 	{
+		bool handled = TwManageEvent(event);
 		if (event.type == sf::Event::Closed) {
 			window->close();
 		}
@@ -71,37 +78,57 @@ void Engine::Update()
 		{
 
 		}
-		if (event.type == sf::Event::MouseMoved)
+		if (!handled)
 		{
-			sf::Vector2f mouse = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
-			sf::Vector2f dmouse = mouse - prev_mouse;
-			if (prev_mouse.x != 0 && prev_mouse.y != 0)
+			if (event.type == sf::Event::MouseMoved)
 			{
-				world.GetCamera()->RotateX(-dmouse.x*mouse_sensitivity);
-				world.GetCamera()->RotateY(dmouse.y*mouse_sensitivity);
+				sf::Vector2f mouse = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
+				if (LMB)
+				{
+					sf::Vector2f dmouse = mouse - prev_mouse;
+					if (prev_mouse.x != 0 && prev_mouse.y != 0)
+					{
+						world.GetCamera()->RotateX(-dmouse.x*mouse_sensitivity);
+						world.GetCamera()->RotateY(dmouse.y*mouse_sensitivity);
+					}
+				}
+				prev_mouse = mouse;
 			}
-			prev_mouse = mouse;
-		}
-		if (event.type == sf::Event::KeyPressed)
-		{
-			const sf::Keyboard::Key keycode = event.key.code;
-			if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
+			else if (event.type == sf::Event::MouseButtonPressed) {
+				if (event.mouseButton.button == sf::Mouse::Left) {
+					LMB = true;
+				}
+			}
+			else if (event.type == sf::Event::MouseButtonReleased) {
+				if (event.mouseButton.button == sf::Mouse::Left) {
+					LMB = false;
+				}
+			}
+			if (event.type == sf::Event::KeyPressed)
+			{
+				const sf::Keyboard::Key keycode = event.key.code;
+				if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
 
-			if (keycode == sf::Keyboard::Escape) {
-				window->close();
+				if (keycode == sf::Keyboard::Escape) {
+					window->close();
+				} 
+				else if (keycode == sf::Keyboard::F4) {
+					TWBAR_ENABLED = !TWBAR_ENABLED;
+				}
+
+				all_keys[keycode] = true;
 			}
-		
-			all_keys[keycode] = true;
-		}
-		else if (event.type == sf::Event::KeyReleased) 
-		{
-			const sf::Keyboard::Key keycode = event.key.code;
-			if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
-			all_keys[keycode] = false;
-		}
-		else if (event.type = sf::Event::MouseWheelScrolled)
-		{
-			camera_speed *= 1 + (float)event.mouseWheelScroll.delta*0.1f;
+			else if (event.type == sf::Event::KeyReleased)
+			{
+				const sf::Keyboard::Key keycode = event.key.code;
+				if (event.key.code < 0 || event.key.code >= sf::Keyboard::KeyCount) { continue; }
+				all_keys[keycode] = false;
+
+			}
+			else if (event.type = sf::Event::MouseWheelScrolled)
+			{
+				camera_speed *= 1 + (float)event.mouseWheelScroll.delta*0.1f;
+			}
 		}
 	}
 
@@ -142,6 +169,7 @@ bool Engine::Render()
 	depth->Run();
 	CL->queue.finish();
 	window->draw(spr);
+	DrawAntTweakBar();
 	window->display();
 	return true;
 }
@@ -197,6 +225,114 @@ void Engine::LoadFromConfig(string file)
 	}
 }
 
-void Engine::Draw()
+
+void Engine::SetAntTweakBar()
 {
+	//TW interface
+	TwInit(TW_OPENGL, NULL);
+	TwWindowSize(Window_W, Window_H);
+
+	stats = TwNewBar("Statistics");
+	TwDefine(" GLOBAL help='Marble Marcher mod by Michael Moroz' ");
+
+	// Change bar position
+	int barPos[2] = { 16, 60 };
+	TwSetParam(stats, NULL, "position", TW_PARAM_INT32, 2, &barPos);
+	TwAddVarRO(stats, "FPS", TW_TYPE_FLOAT, &fps, " label='FPS' ");
+	TwAddVarRO(stats, "Render width", TW_TYPE_INT32, &width, "");
+	TwAddVarRO(stats, "Render height", TW_TYPE_INT32, &height, "");
+	TwAddVarRO(stats, "MRRM level", TW_TYPE_INT32, &MRRMlvl, "");
+	TwAddVarRO(stats, "MRRM scale", TW_TYPE_INT32, &MRRMsc, "");
+	
+	settings = TwNewBar("Settings");
+	TwAddVarRW(settings, "Mouse sensitivity", TW_TYPE_FLOAT, &mouse_sensitivity, "min=0.000 max=0.5 step=0.001");
+	TwAddVarRW(settings, "Camera speed", TW_TYPE_FLOAT, &camera_speed, "min=0.000 max=5 step=0.001");
+
+	int barPos1[2] = { 16, 450 };
+
+	TwSetParam(settings, NULL, "position", TW_PARAM_INT32, 2, &barPos1);
+
+	TwDefine(" GLOBAL fontsize=3 ");
+	TwDefine("Settings color='255 128 0' alpha=210");
+	TwDefine("Statistics color='0 128 255' alpha=210");
 }
+
+void Engine::DrawAntTweakBar()
+{
+	//Refresh tweak bar
+	if (TWBAR_ENABLED)
+	{
+		TwRefreshBar(stats);
+		TwRefreshBar(settings);
+		TwDraw();
+	}
+}
+
+bool Engine::TwManageEvent(sf::Event &event)
+{
+	if (TWBAR_ENABLED)
+	{
+		bool released = event.type == sf::Event::MouseButtonReleased;
+		bool moved = event.type == sf::Event::MouseMoved;
+		bool LMB = event.mouseButton.button == sf::Mouse::Left;
+		bool RMB = event.mouseButton.button == sf::Mouse::Right;
+		bool MMB = event.mouseButton.button == sf::Mouse::Middle;
+
+		bool handl = 0;
+
+		if (moved)
+		{
+			sf::Vector2i mouse = sf::Vector2i(event.mouseMove.x, event.mouseMove.y);
+			handl = handl || TwMouseMotion(mouse.x, mouse.y);
+		}
+
+		if (LMB && !released)
+		{
+			handl = handl || TwMouseButton(TW_MOUSE_PRESSED, TW_MOUSE_LEFT);
+		}
+		if (LMB && released)
+		{
+			handl = handl || TwMouseButton(TW_MOUSE_RELEASED, TW_MOUSE_LEFT);
+		}
+
+		if (MMB && !released)
+		{
+			handl = handl || TwMouseButton(TW_MOUSE_PRESSED, TW_MOUSE_MIDDLE);
+		}
+		if (MMB && released)
+		{
+			handl = handl || TwMouseButton(TW_MOUSE_RELEASED, TW_MOUSE_MIDDLE);
+		}
+
+		if (RMB && !released)
+		{
+			handl = handl || TwMouseButton(TW_MOUSE_PRESSED, TW_MOUSE_RIGHT);
+		}
+		if (RMB && released)
+		{
+			handl = handl || TwMouseButton(TW_MOUSE_RELEASED, TW_MOUSE_RIGHT);
+		}
+
+		if (RMB && released)
+		{
+			handl = handl || TwMouseButton(TW_MOUSE_RELEASED, TW_MOUSE_RIGHT);
+		}
+
+		bool keypress = event.type == sf::Event::KeyPressed;
+		bool keyrelease = event.type == sf::Event::MouseButtonReleased;
+		int keycode = event.key.code;
+
+		if (keypress)
+		{
+			handl = handl || TwKeyPressed(TW_KEY_F1 + keycode - sf::Keyboard::F1, TW_KMOD_NONE);
+		}
+
+		return handl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+
