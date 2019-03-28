@@ -28,7 +28,7 @@ target_include_directories(DeltaBetaCLSources PUBLIC
 
 
 if(WIN32)
-  add_executable(DeltaBetaCLEngine WIN32 src/Main.cpp src/Resource.rc assets/icon.ico)
+  add_executable(DeltaBetaCLEngine WIN32 src/Main.cpp src/Resource.rc assets/Images/icon.ico)
   set_source_files_properties(icon.ico Resource.rc PROPERTIES LANGUAGE RC)
 else()
   add_executable(DeltaBetaCLEngine Main.cpp)

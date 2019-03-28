@@ -1,6 +1,3 @@
-
-
-
 #include <OpenCL.h>
 #include <Camera.h>
 #include <CLFunction.h>
@@ -10,11 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-
 using namespace std;
-
-
-
 
 #if defined(_WIN32)
 int WinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow) {

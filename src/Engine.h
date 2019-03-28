@@ -13,9 +13,7 @@
 #endif
 
 static const string config = "engine.cfg";
-static const string vert_glsl = "shaders/vertex_shader.glsl";
-static const string frag_glsl = "shaders/fragment_shader.glsl";
-static const string kernel_cl = "OpenCL/kernel.c";
+static const string kernel_cl = "OpenCL/main.c";
 static const string kernel_depth = "first_pass_render";
 static const string kernel_texturing = "";
 static const string kernel_post = "";

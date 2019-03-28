@@ -1,5 +1,11 @@
 # DeltaBetaCL
-An OpenCL ray marching engine
+A fast OpenCL ray marching engine. The ray marching process is accelerated by using multiresolution ray marching, which is a [multigrid method](https://en.wikipedia.org/wiki/Multigrid_method).
+It uses OpenCL version 1.2
+
+In the future I'm planning to add:
+* Bounding volume hierarchy
+* High order nonlinear surface signed distance functions(SDF)
+* SDF based general physics engine, for accurate collision detection
 
 ## System Dependencies
 * OpenCL
@@ -14,3 +20,8 @@ To build the project:
 * `cd DeltaBetaCL && mkdir build && cd build && cmake ..`
 
 Note, if you are using Visal Studio, you should set DeltaBetaCLEngine as the startup project.
+
+## Q&A
+* Why am I using OpenCL instead of OpenGL compute shaders?
+The main reason would be that I have more experience using OpenCL and OpenCL seem's to be more computationally oriented with more advanced memory control. While using it only for ray marching would probably be meaningless, it's definitely better suited to perform physics simulations, since it can even run on the CPU.
+And yeah, I'm definitely not using CUDA any time soon.
