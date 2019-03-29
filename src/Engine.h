@@ -24,6 +24,7 @@ class Engine
 private:
 	sf::RenderWindow *window;
 	int Window_W, Window_H;
+	bool vsync;
 	int width, height;
 	int MRRMlvl, MRRMsc;
 	float mouse_sensitivity, camera_speed;
@@ -33,6 +34,8 @@ private:
 	bool LMB, MMB, RMB;
 
 	OpenCL *CL;
+	int CL_device;
+
 	World world;
 	CLRender *depth, *texturing, *post_processing;
 	float time, fps, smoothfps;

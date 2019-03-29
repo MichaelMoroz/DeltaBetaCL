@@ -8,8 +8,7 @@ TWBAR_ENABLED(false)
 	settings.minorVersion = 0;
 	sf::VideoMode window_size(Width, Height, 24);
 	window = new sf::RenderWindow(window_size, "Engine Demo", sf::Style::Fullscreen, settings);
-	//window.setFramerateLimit(60);
-	window->setVerticalSyncEnabled(true);
+	
 	if (glewInit())
 	{
 		ErrMsg("Failed to init GLEW");
@@ -24,17 +23,22 @@ TWBAR_ENABLED(false)
 	img.create(width, height, sf::Color::Red);
 	texture.loadFromImage(img);
 
+	window->setFramerateLimit(60);
+	window->setVerticalSyncEnabled(vsync);
+
 	spr.setTexture(texture);
 	spr.setScale((float)window->getSize().x / GetRenderSize().x, (float)window->getSize().y / GetRenderSize().y);
 	
 
 	prev_mouse = sf::Vector2f(0.f, 0.f);
-	CL = new OpenCL(kernel_cl);
+	CL = new OpenCL(kernel_cl, CL_device, !debug);
 
 	if (CL->failed)
 	{
 		window->close();
+		ErrMsg("OpenCL initialization failed!");
 	}
+
 	Window_W = window->getSize().x;
 	Window_H = window->getSize().y;
 	SetAntTweakBar();
@@ -217,6 +221,12 @@ void Engine::LoadFromConfig(string file)
 				case 6:
 					debug = num;
 					break;
+				case 7:
+					CL_device = num;
+					break;
+				case 8:
+					vsync = num;
+					break;
 				default:
 					break;
 				}
@@ -238,11 +248,14 @@ void Engine::SetAntTweakBar()
 	// Change bar position
 	int barPos[2] = { 16, 60 };
 	TwSetParam(stats, NULL, "position", TW_PARAM_INT32, 2, &barPos);
+
+
 	TwAddVarRO(stats, "FPS", TW_TYPE_FLOAT, &fps, " label='FPS' ");
 	TwAddVarRO(stats, "Render width", TW_TYPE_INT32, &width, "");
 	TwAddVarRO(stats, "Render height", TW_TYPE_INT32, &height, "");
 	TwAddVarRO(stats, "MRRM level", TW_TYPE_INT32, &MRRMlvl, "");
 	TwAddVarRO(stats, "MRRM scale", TW_TYPE_INT32, &MRRMsc, "");
+	TwAddButton(stats, "Info1.1", NULL, NULL, (" label='Rendering device: " + CL->device_name + "' ").c_str());
 	
 	settings = TwNewBar("Settings");
 	TwAddVarRW(settings, "Mouse sensitivity", TW_TYPE_FLOAT, &mouse_sensitivity, "min=0.000 max=0.5 step=0.001");
@@ -252,7 +265,8 @@ void Engine::SetAntTweakBar()
 
 	TwSetParam(settings, NULL, "position", TW_PARAM_INT32, 2, &barPos1);
 
-	TwDefine(" GLOBAL fontsize=3 ");
+	TwDefine("Statistics size='300 200' "); // resize bar
+	TwDefine("GLOBAL fontsize=3 ");
 	TwDefine("Settings color='255 128 0' alpha=210");
 	TwDefine("Statistics color='0 128 255' alpha=210");
 }

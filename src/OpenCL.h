@@ -22,6 +22,13 @@ using namespace cl;
 using namespace std;
 
 //This class wraps all the OpenCL loading, GLCL interop and code compilation
+template < typename T > std::string num2str(const T& n)
+{
+	std::ostringstream stm;
+	stm << n;
+	return stm.str();
+}
+
 
 class OpenCL
 {
@@ -48,7 +55,7 @@ public:
 	}
 
 
-	OpenCL(string Kernel_path): failed(false)
+	OpenCL(string Kernel_path, int clgl_device, bool mute): failed(false)
 	{
 		ifstream sin(Kernel_path);
 
@@ -72,7 +79,6 @@ public:
 		// Get platforms.
 		vector<Platform> all_platforms;
 		vector<Device> all_devices;
-		vector<Device> dev;
 
 		Platform::get(&all_platforms);
 
@@ -82,12 +88,26 @@ public:
 			failed = true;
 		}
 
+		if (!mute)
+		{
+			ERROR_MSG((num2str(all_platforms.size()) + " platforms found").c_str());
+		}
+
+
 		bool found_context = 0;
 		
+		int clgl_d_num = 0;
+
 		for (int i = 0; i < all_platforms.size(); i++)
 		{
-			default_platform = all_platforms[i];
-			default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+			Platform test_platform = all_platforms[i];
+			test_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+
+			if (!mute)
+			{
+				string device_nam = test_platform.getInfo<CL_PLATFORM_NAME>();
+				ERROR_MSG(("Platform: \n" + device_nam).c_str());
+			}
 
 			if (all_devices.size() == 0)
 			{
@@ -103,24 +123,39 @@ public:
 				CL_WGL_HDC_KHR,
 				(cl_context_properties)wglGetCurrentDC(), // HDC handle
 				CL_CONTEXT_PLATFORM,
-				(cl_context_properties)default_platform(), 0
+				(cl_context_properties)test_platform(), 0
 			};
 
 			// Look for the compatible context.
 			for (int j = 0; j < all_devices.size(); j++)
 			{
-				default_device = all_devices[j];
-				cl_device_id aka = default_device();
+				Device test_device = all_devices[j];
+				cl_device_id aka = test_device();
 				cl::Context test_context(clCreateContext(props, 1, &aka, NULL, NULL, &lError));
 				if (lError == CL_SUCCESS)
 				{
-					cout << "We found the GLCL context." << endl;
-
-					default_context = test_context;
-					found_context = 1;
-					break;
+					if (!mute)
+					{
+						string device_nam = test_device.getInfo<CL_DEVICE_NAME>();
+						ERROR_MSG(("We found a GLCL context! \n" + device_nam).c_str());
+					}
+					
+					if (clgl_device == clgl_d_num)
+					{
+						
+						default_context = test_context;
+						default_platform = test_platform;
+						default_device = test_device;
+						found_context = 1;
+					}
+					clgl_d_num++;
 				}
 			}
+		}
+
+		if (clgl_d_num > 1 && !mute)
+		{
+			ERROR_MSG("Multiple interoperation OpenCL devices found, change the device number in config.cfg if program exit's/crashes.");
 		}
 
 		if (!found_context)
@@ -131,14 +166,16 @@ public:
 
 		// Create a command queue.
 		default_program = cl::Program(default_context, sources);
+		vector<Device> dev;
 		dev.push_back(default_device);
-		if (default_program.build(dev) != CL_SUCCESS)
+		cl_int BUILD_ERR = default_program.build(dev);
+		if (BUILD_ERR != CL_SUCCESS)
 		{
 			//save error log to file
 			ofstream inter;
 			inter.open("errors.txt", ofstream::ate);
 			string error_msg(default_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
-			ERROR_MSG((string("Error building kernel! \n") + error_msg).c_str());
+			ERROR_MSG(("Error building kernel! Error number: "+ num2str(BUILD_ERR)+"\n" + error_msg).c_str());
 			inter << "Building kernel errors: " << endl << error_msg << "\n";
 			failed = true;
 		}

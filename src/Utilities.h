@@ -49,10 +49,3 @@ void Logger(string text);
 //random float number between 0 and 1
 float Rand();
 
-
-template < typename T > std::string num2str(const T& n)
-{
-	std::ostringstream stm;
-	stm << n;
-	return stm.str();
-}
