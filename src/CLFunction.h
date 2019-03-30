@@ -1,6 +1,8 @@
-#pragma once
+ #pragma once
 
 #include<Utilities.h>
+
+
 //This class wraps the OpenCL kernel function computation
 class CLFunction
 {
@@ -40,29 +42,46 @@ public:
 
 	void SetArg(int i, cl::Buffer &A)
 	{
-		kernel.setArg(i, A);
+		cl_int arg_error = kernel.setArg(i, A);
+		if (arg_error != CL_SUCCESS)
+		{
+			string err = "OpenCL setArg " + num2str(i) + " error: " + getOpenCLError(arg_error);
+			ERROR_MSG(err.c_str());
+		}
 	}
 
 	void SetArg(int i, cl::Image2D &A)
 	{
-		kernel.setArg(i, A);
+		cl_int arg_error = kernel.setArg(i, A);
+		if (arg_error != CL_SUCCESS)
+		{
+			string err = "OpenCL setArg " + num2str(i) + " error: " + getOpenCLError(arg_error);
+			ERROR_MSG(err.c_str());
+		}
 	}
 
 	//floatN
 	void SetArg(int i, int N, float *A)
-	{
-		kernel.setArg(i, sizeof(float)*N, A);
+	{	
+		cl_int arg_error = kernel.setArg(i, sizeof(float)*N, A);
+		if (arg_error != CL_SUCCESS)
+		{
+			string err = "OpenCL setArg " + num2str(i) + " error: " + getOpenCLError(arg_error);
+			ERROR_MSG(err.c_str());
+		}
 	}
 
-	void SetArg(int i, float A)
+	template<class E> void SetArg(int i, E& A)
 	{
-		kernel.setArg(i, sizeof(float), (void*)&A);
+		int size = sizeof(E);
+		cl_int arg_error = kernel.setArg(i, size, (void*)&A);
+		if (arg_error != CL_SUCCESS)
+		{
+			string err = "OpenCL setArg " + num2str(i) + " error: " + getOpenCLError(arg_error);
+			ERROR_MSG(err.c_str());
+		}
 	}
 
-	void SetArg(int i, int A)
-	{
-		kernel.setArg(i, sizeof(int), (void*)&A);
-	}
 
 	void Run()
 	{
@@ -77,12 +96,12 @@ public:
 
 	int RFlush()
 	{
-		int error = CL->queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local);
+		cl_int error = CL->queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local);
 		CL->queue.flush();
 		if (error != 0)
 		{
-			//string error = "OpenCL function " + name + " error: " + num2str(error);
-			ERROR_MSG("CLFunction ERROR");
+			string err = string("OpenCL function \"") + name + string("\" error: ") + getOpenCLError(error);
+			ERROR_MSG(err.c_str());
 		}
 		return error;
 	}

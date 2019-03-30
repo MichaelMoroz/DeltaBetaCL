@@ -1,13 +1,4 @@
-#define PI 3.14159265f
-#define iFracScale 1.8f
-#define iFracAng1 -0.12f
-#define iFracAng2 0.5f
-#define sin1 -0.1197f
-#define cos1 0.9928f
-#define sin2 0.4794f
-#define cos2 0.8775f
-#define iFracShift (float4)(-2.12f, -2.75f, 0.49f,0.f)
-#define iFracIter 16
+
 
 /*
 

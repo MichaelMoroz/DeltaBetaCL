@@ -1,4 +1,4 @@
-#include "Engine.h"
+﻿#include "Engine.h"
 
 Engine::Engine(int Width, int Height) : time(0.f), mouse_sensitivity(0.0004f), camera_speed(0.075f),
 TWBAR_ENABLED(false)
@@ -29,23 +29,28 @@ TWBAR_ENABLED(false)
 	spr.setTexture(texture);
 	spr.setScale((float)window->getSize().x / GetRenderSize().x, (float)window->getSize().y / GetRenderSize().y);
 	
-
 	prev_mouse = sf::Vector2f(0.f, 0.f);
+
+	Window_W = window->getSize().x;
+	Window_H = window->getSize().y;
+	
+
 	CL = new OpenCL(kernel_cl, CL_device, !debug);
 
 	if (CL->failed)
 	{
 		window->close();
-		ErrMsg("OpenCL initialization failed!");
+		ErrMsg("OpenCL initialization failed! \n =(");
+	}
+	else
+	{
+		depth = new CLRender(kernel_depth, texture.getNativeHandle(), 1,
+			texture.getSize().x, texture.getSize().y, MRRMlvl, MRRMsc, CL, debug);
+		depth->UseWorldModel(&world);
 	}
 
-	Window_W = window->getSize().x;
-	Window_H = window->getSize().y;
 	SetAntTweakBar();
 
-	depth = new CLRender(kernel_depth, texture.getNativeHandle(), 1, 
-		texture.getSize().x, texture.getSize().y, MRRMlvl, MRRMsc, CL, debug);
-	depth->UseWorldModel(&world);
 }
 
 vec2 Engine::GetRenderSize()
